@@ -6,7 +6,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { motion } from "motion/react";
 import { Reveal, motionTokens, useHomeReducedMotion } from "@/components/home/motion";
 import { CsImage } from "@/components/projects/light/CaseStudyArtwork";
-import { WorkNodesVisual } from "@/components/work/WorkNodesVisual";
+import { ProductImpactPrism } from "@/components/work/ProductImpactPrism";
 import type { WorkShowcaseProject } from "@/lib/work-projects";
 import {
   workArchitectureLayers,
@@ -197,7 +197,7 @@ export function WorkPageContent({ showcaseProjects }: { showcaseProjects: WorkSh
           </Reveal>
         </div>
         <Reveal entrance delay={0.3}>
-          <WorkNodesVisual />
+          <ProductImpactPrism />
         </Reveal>
       </section>
 

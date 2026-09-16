@@ -3070,19 +3070,25 @@ a.s6-tech-pill:focus-visible .s6-tech-icon {
   max-width: 460px;
 }
 
-.s6-work-nodes {
+.s6-prism {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.s6-prism-stage {
   position: relative;
-  width: min(320px, 100%);
+  width: min(480px, 100%);
   aspect-ratio: 1;
   margin-inline: auto;
 }
-.s6-work-nodes-lines {
+.s6-prism-lines {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
-.s6-work-node-center {
+.s6-prism-core {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -3090,45 +3096,131 @@ a.s6-tech-pill:focus-visible .s6-tech-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  background: var(--s6-card);
-  border: 1px solid var(--s6-border);
+  width: 60px;
+  height: 60px;
 }
-.s6-work-node {
+.s6-prism-core-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center;
+}
+.s6-prism-face-wrap {
   position: absolute;
+  transform: translate(-50%, -50%);
+}
+.s6-prism-face {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  width: 128px;
+  gap: 6px;
+  width: 176px;
+  padding: 16px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--s6-border);
+  background: var(--s6-card);
   text-align: center;
-  font-size: 11.5px;
-  font-weight: 500;
+  text-decoration: none;
   color: var(--s6-navy);
+  box-shadow: 0 4px 18px rgba(15, 23, 60, 0.05);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
-.s6-work-node-icon {
+.s6-prism-face:hover,
+.s6-prism-face:focus-visible,
+.s6-prism-face-active {
+  border-color: var(--face-color, var(--s6-blue));
+  box-shadow: 0 10px 28px rgba(15, 23, 60, 0.1);
+}
+.s6-prism-face-icon {
   padding: 9px;
   border-radius: 999px;
-  background: var(--s6-card);
-  border: 1px solid var(--s6-border);
-  color: var(--s6-blue);
+  background: var(--s6-surface);
+  color: var(--face-color, var(--s6-blue));
+  transition: color 0.2s ease;
 }
-.s6-work-node-top {
-  top: 12.5%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.s6-prism-face-category {
+  margin-top: 4px;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--s6-muted);
 }
-.s6-work-node-left {
-  top: 70%;
-  left: 18.75%;
-  transform: translate(-50%, -50%);
+.s6-prism-face-project {
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: var(--s6-navy);
 }
-.s6-work-node-right {
-  top: 70%;
-  left: 81.25%;
-  transform: translate(-50%, -50%);
+.s6-prism-face-outcome {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--s6-body);
+}
+.s6-prism-face-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--face-color, var(--s6-blue));
+  opacity: 0;
+  transform: translateY(-2px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.s6-prism-face:hover .s6-prism-face-cta,
+.s6-prism-face:focus-visible .s6-prism-face-cta,
+.s6-prism-face-active .s6-prism-face-cta {
+  opacity: 1;
+  transform: translateY(0);
+}
+.s6-prism-footer {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  color: var(--s6-muted);
+  text-align: center;
+}
+@media (max-width: 480px) {
+  .s6-prism-stage {
+    width: min(320px, 100%);
+  }
+  .s6-prism-face {
+    width: 132px;
+    height: 130px;
+    justify-content: center;
+    padding: 12px 10px;
+    gap: 4px;
+  }
+  /* Fixed height + clamped text so every face reaches the same predictable
+     size regardless of how long its own project name or outcome text is —
+     "Leicester Medical Society" would otherwise make that one face visibly
+     taller than "SPEEZU"/"DURAFOAM" and risk overlapping its neighbour at
+     this size. The full text remains in the face's aria-label either way. */
+  .s6-prism-face-project {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  .s6-prism-face-outcome {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+    font-size: 11px;
+  }
+  .s6-prism-core {
+    width: 48px;
+    height: 48px;
+  }
 }
 
 .s6-work-journey {
@@ -3352,14 +3444,11 @@ a.s6-tech-pill:focus-visible .s6-tech-icon {
   .s6-work-hero {
     grid-template-columns: 1fr;
   }
-  .s6-work-nodes {
-    margin-top: 12px;
+  .s6-prism {
+    margin-top: 20px;
   }
 }
 @media (max-width: 640px) {
-  .s6-work-nodes {
-    display: none;
-  }
   .s6-work-journey-step {
     flex: 1 1 100%;
   }
