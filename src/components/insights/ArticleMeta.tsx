@@ -12,8 +12,8 @@ export function formatDate(iso: string): string {
 
 export function ArticleMeta({ article, showAuthor = true }: { article: Insight; showAuthor?: boolean }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-[10px] uppercase tracking-[0.18em] text-mist">
-      {showAuthor && <span className="text-sage/80">{article.author}</span>}
+    <div className="s6-article-meta">
+      {showAuthor && <span className="s6-article-meta-author">{article.author}</span>}
       {article.publishedAt && <span>{formatDate(article.publishedAt)}</span>}
       {article.updatedAt && <span>Updated {formatDate(article.updatedAt)}</span>}
       <span>{article.readingTime}</span>

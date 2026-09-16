@@ -97,7 +97,7 @@ describe("parseAssistantResponse", () => {
 
 describe("linkIdToRoute", () => {
   it("maps allowlisted ids to real internal routes", () => {
-    expect(linkIdToRoute("services")).toBe("/services");
+    expect(linkIdToRoute("services")).toBe("/expertise");
     expect(linkIdToRoute("speezu")).toBe("/work/speezu");
     expect(linkIdToRoute("durafoam")).toBe("/work/durafoam-3d-foam-configurator-shopify");
     expect(linkIdToRoute("contact")).toBe("/contact");

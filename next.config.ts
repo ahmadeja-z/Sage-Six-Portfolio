@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      { source: "/services", destination: "/expertise", permanent: true },
+      { source: "/about", destination: "/company", permanent: true },
+    ];
+  },
   images: {
     localPatterns: [
       // All local images without a query string (projects, case studies, logos).

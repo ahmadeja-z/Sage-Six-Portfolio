@@ -2,13 +2,15 @@ import type { Metadata, Viewport } from "next";
 import dynamic from "next/dynamic";
 import { Geist_Mono, Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import "./home.css";
 import { siteConfig } from "@/lib/site";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
-import { CustomCursor } from "@/components/ui/CustomCursor";
-import { NoiseOverlay } from "@/components/ui/NoiseOverlay";
-import { RouteTransition } from "@/components/layout/RouteTransition";
-import { Navigation } from "@/components/layout/Navigation";
-import { Footer } from "@/components/layout/Footer";
+
+import {
+  SiteHeader,
+  SiteFooter,
+  LegacyEffects,
+} from "@/components/layout/SiteChrome";
 
 const AIProjectAssistant = dynamic(
   () =>
@@ -76,16 +78,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/images/sagesix-favicon.ico", sizes: "any" },
-      { url: "/images/sagesix-icon-16.png?v=2", sizes: "16x16", type: "image/png" },
-      { url: "/images/sagesix-icon-32.png?v=2", sizes: "32x32", type: "image/png" },
+      { url: "/images/sagesix-icon.svg", sizes: "any", type: "image/svg+xml" },
     ],
-    apple: "/images/sagesix-apple-icon.png?v=2",
+    apple: "/images/sagesix-apple-icon-new.png",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a09",
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
 };
@@ -109,9 +109,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               email: siteConfig.email,
               logo: {
                 "@type": "ImageObject",
-                url: `${siteConfig.url}/images/sagesix-icon.png`,
-                width: 1254,
-                height: 1254,
+                url: `${siteConfig.url}/images/sagesix-icon.svg`,
+                width: 61,
+                height: 70,
               },
               slogan: "Software. AI. Product. Built to scale.",
               description:
@@ -127,13 +127,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             }),
           }}
         />
-        <NoiseOverlay />
+        <LegacyEffects />
         <SmoothScroll />
-        <CustomCursor />
-        <RouteTransition />
-        <Navigation />
-        <main id="main" tabIndex={-1}>{children}</main>
-        <Footer />
+        <SiteHeader />
+        <main id="main" tabIndex={-1}>
+          {children}
+        </main>
+        <SiteFooter />
         <AIProjectAssistant />
       </body>
     </html>

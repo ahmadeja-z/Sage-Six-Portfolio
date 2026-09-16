@@ -6,6 +6,16 @@ import { CaseStudyHero } from "@/components/projects/CaseStudyHero";
 import { CaseStudySection } from "@/components/projects/CaseStudySection";
 import { ProjectCTA } from "@/components/projects/ProjectCTA";
 import { NextProjectNavigation } from "@/components/projects/NextProjectNavigation";
+import { CaseStudyLight } from "@/components/projects/light/CaseStudyLight";
+
+// Case studies migrated to the new light Sage Six theme. Add a slug here
+// once its presentation has been redesigned (see SiteChrome's LIGHT_THEME_ROUTES,
+// which must be kept in sync for the header/footer to match).
+const LIGHT_THEME_PROJECTS = new Set([
+  "speezu",
+  "durafoam-3d-foam-configurator-shopify",
+  "leicester-medical-society",
+]);
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -80,6 +90,18 @@ export default async function CaseStudyPage({ params }: PageProps) {
       author: { "@type": "Organization", name: "SageSix", url: siteConfig.url },
     })),
   ];
+
+  if (LIGHT_THEME_PROJECTS.has(project.slug)) {
+    return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <CaseStudyLight project={project} />
+      </>
+    );
+  }
 
   return (
     <>

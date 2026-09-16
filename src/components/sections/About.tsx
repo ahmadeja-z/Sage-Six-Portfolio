@@ -11,7 +11,7 @@ export function About() {
           <p className="eyebrow mb-8">About</p>
           <TextReveal
             as="h2"
-            lines={["We&apos;re a small team", "building big ideas."]}
+            lines={["We are  a small team", "building big ideas."]}
             className="display-2 font-display text-bone"
             lineClassName="text-bone"
             stagger={0.1}
@@ -25,7 +25,7 @@ export function About() {
           </Reveal>
           <Reveal delay={0.3}>
             <div className="mt-10">
-              <Button href="/about" variant="outline">
+              <Button href="/company" variant="outline">
                 More about us
               </Button>
             </div>

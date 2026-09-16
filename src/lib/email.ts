@@ -14,10 +14,10 @@ function labelOf(value: string, map: Record<string, string>, fallback: string): 
   return map[value] ?? fallback;
 }
 
-export function buildEnquirySubject(enquiryType: string, service: string): string {
+export function buildEnquirySubject(name: string, company: string, enquiryType: string): string {
   const typeLabel = labelOf(enquiryType, ENQUIRY_LABELS, "General Enquiry");
-  const serviceLabel = labelOf(service, SERVICE_LABELS, "Not specified");
-  return `New Sage Six Enquiry — ${typeLabel} — ${serviceLabel}`;
+  const who = company ? `${name} (${company})` : name;
+  return `New Sage Six Enquiry from ${who} — ${typeLabel}`;
 }
 
 function escapeHtml(value: string): string {
@@ -44,6 +44,7 @@ export function buildEnquiryEmail(lead: LeadPayload, submittedAt: string, refere
   const websiteLink = lead.websiteLink || "Not provided";
   const budget = lead.budget || "Not provided";
   const timing = lead.timing || "Not provided";
+  const sourcePage = lead.page || "Not recorded";
 
   const rows = [
     ["Full name", lead.name],
@@ -54,6 +55,7 @@ export function buildEnquiryEmail(lead: LeadPayload, submittedAt: string, refere
     ["Website or app link", websiteLink],
     ["Budget", budget],
     ["Preferred timing", timing],
+    ["Source page", sourcePage],
     ["Submitted", submittedAt],
     ...(reference ? [["Reference", reference]] : []),
   ] as const;
@@ -84,12 +86,17 @@ export function buildEnquiryEmail(lead: LeadPayload, submittedAt: string, refere
             <p style="margin:0 0 8px;color:#ecece5;font-size:16px;font-weight:bold;">Full message</p>
             <p style="margin:0;color:#b6b6ac;font-size:14px;line-height:1.6;">${paragraph(lead.message)}</p>
           </td></tr>
+          <tr><td style="padding:0 28px 24px;border-top:1px solid #26262a;">
+            <p style="margin:16px 0 0;color:#7c7c74;font-size:12px;">Reply directly to this email to respond to ${escapeHtml(
+              lead.name,
+            )}.</p>
+          </td></tr>
         </table>
       </td></tr>
     </table>
   </body></html>`;
 
-  const text = `SAGE SIX — NEW WEBSITE ENQUIRY\n\nEnquiry summary\n${textRows}\n\nFull message\n${lead.message}`;
+  const text = `SAGE SIX — NEW WEBSITE ENQUIRY\n\nEnquiry summary\n${textRows}\n\nFull message\n${lead.message}\n\nReply directly to this email to respond to ${lead.name}.`;
 
   return { html, text };
 }

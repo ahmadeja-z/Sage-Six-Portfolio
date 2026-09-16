@@ -60,6 +60,37 @@ const intro: ChatMessage = {
   ],
 };
 
+// Keeps the floating launcher/panel clear of the footer (links, legal text,
+// the Companies House link) by parking them fully above it as soon as any
+// part of the footer enters view, rather than tracking scroll continuously.
+function useFooterDockOffset(): number {
+  const [offset, setOffset] = useState(0);
+  useEffect(() => {
+    const footer = document.getElementById("site-footer");
+    if (!footer) return;
+    const gap = 24;
+    const computeOffset = () => {
+      const height = footer.getBoundingClientRect().height;
+      const maxOffset = Math.max(window.innerHeight - 160, 120);
+      return Math.min(height + gap, maxOffset);
+    };
+    const io = new IntersectionObserver(
+      ([entry]) => setOffset(entry.isIntersecting ? computeOffset() : 0),
+      { threshold: 0 },
+    );
+    io.observe(footer);
+    const ro = new ResizeObserver(() => {
+      setOffset((prev) => (prev > 0 ? computeOffset() : 0));
+    });
+    ro.observe(footer);
+    return () => {
+      io.disconnect();
+      ro.disconnect();
+    };
+  }, []);
+  return offset;
+}
+
 function makeSessionId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
   return `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
@@ -82,9 +113,20 @@ export function AIProjectAssistant() {
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const reduce = useReducedMotion();
+  const dockOffset = useFooterDockOffset();
+  const dockTransition = reduce ? undefined : "bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1)";
 
   useEffect(() => {
     setSessionId(makeSessionId());
+  }, []);
+
+  // Lets other pages open the assistant without prop-drilling — e.g. an
+  // "Ask Sage Six" link on the Work page. Purely additive: nothing dispatches
+  // this event today outside that one call site.
+  useEffect(() => {
+    const openFromEvent = () => setOpen(true);
+    window.addEventListener("sagesix:open-assistant", openFromEvent);
+    return () => window.removeEventListener("sagesix:open-assistant", openFromEvent);
   }, []);
 
   useEffect(() => {
@@ -190,6 +232,7 @@ export function AIProjectAssistant() {
     setSessionId(makeSessionId());
     setLead(emptyLead);
     setLeadStep("form");
+    setLeadSubmissionId(makeSessionId());
   }
 
   // --- Lead flow ---
@@ -197,6 +240,9 @@ export function AIProjectAssistant() {
   const [leadStep, setLeadStep] = useState<"form" | "review" | "done">("form");
   const [leadError, setLeadError] = useState("");
   const [leadSubmitting, setLeadSubmitting] = useState(false);
+  // Reused across retries of the same enquiry so the server can de-duplicate
+  // via an idempotency key; a fresh id is generated once it actually sends.
+  const [leadSubmissionId, setLeadSubmissionId] = useState(() => makeSessionId());
 
   function setLeadField<K extends keyof LeadForm>(key: K, value: string) {
     setLead((l) => ({ ...l, [key]: value }));
@@ -226,10 +272,12 @@ export function AIProjectAssistant() {
       websiteLink: lead.websiteLink.trim(),
       timing: lead.timing.trim(),
       budget: lead.budget.trim(),
+      submissionId: leadSubmissionId,
     });
     setLeadSubmitting(false);
     if (result.ok) {
       setLeadStep("done");
+      setLeadSubmissionId(makeSessionId());
       pushMessage({
         role: "assistant",
         content: "Thank you — your enquiry has been submitted. We'll review the details and respond using the email address you provided.",
@@ -430,7 +478,11 @@ export function AIProjectAssistant() {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 1.6, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed bottom-5 right-5 z-[95] flex h-14 items-center gap-2.5 rounded-full bg-sage px-5 font-mono text-[11px] uppercase tracking-[0.16em] text-ink shadow-[0_8px_30px_rgba(163,184,138,0.25)] transition-colors duration-300 hover:bg-sage-bright"
+        style={{
+          bottom: `calc(20px + env(safe-area-inset-bottom, 0px) + ${dockOffset}px)`,
+          transition: dockTransition,
+        }}
+        className="fixed right-5 z-[95] flex h-14 items-center gap-2.5 rounded-full bg-sage px-5 font-mono text-[11px] uppercase tracking-[0.16em] text-ink shadow-[0_8px_30px_rgba(163,184,138,0.25)] transition-colors duration-300 hover:bg-sage-bright"
         data-cursor="hover"
       >
         {open ? <X className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
@@ -446,7 +498,11 @@ export function AIProjectAssistant() {
             animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.97 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-24 right-5 z-[94] flex h-[min(600px,calc(100svh-7rem))] w-[min(420px,calc(100vw-2.5rem))] flex-col overflow-hidden border border-line bg-ink-2/95 backdrop-blur-xl"
+            style={{
+              bottom: `calc(96px + env(safe-area-inset-bottom, 0px) + ${dockOffset}px)`,
+              transition: dockTransition,
+            }}
+            className="fixed right-5 z-[94] flex h-[min(600px,calc(100svh-7rem))] w-[min(420px,calc(100vw-2.5rem))] flex-col overflow-hidden border border-line bg-ink-2/95 backdrop-blur-xl"
           >
             <div className="flex items-center justify-between border-b border-line px-5 py-4">
               <div className="flex items-center gap-3">

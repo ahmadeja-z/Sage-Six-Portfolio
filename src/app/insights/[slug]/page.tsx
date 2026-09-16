@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getInsight, getPublishedInsights, AUTHOR } from "@/data/insights";
 import { siteConfig } from "@/lib/site";
+import { Reveal } from "@/components/home/motion";
 import { ArticleMeta } from "@/components/insights/ArticleMeta";
 import { ArticleContent, getArticleHeadings } from "@/components/insights/ArticleContent";
 import { ArticleTOC } from "@/components/insights/ArticleTOC";
@@ -13,24 +14,18 @@ type PageProps = { params: Promise<{ slug: string }> };
 
 function BreadcrumbNav({ title }: { title: string }) {
   return (
-    <nav aria-label="Breadcrumb" className="container-x pt-28 md:pt-36">
-      <ol className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-mist">
-        <li className="flex items-center gap-2">
-          <Link href="/" className="transition-colors hover:text-sage">
-            Home
-          </Link>
+    <nav aria-label="Breadcrumb" className="s6-container s6-article-breadcrumb">
+      <ol>
+        <li>
+          <Link href="/">Home</Link>
         </li>
-        <li className="flex items-center gap-2">
+        <li>
           <span aria-hidden="true">/</span>
-          <Link href="/insights" className="transition-colors hover:text-sage">
-            Insights
-          </Link>
+          <Link href="/insights">Insights</Link>
         </li>
-        <li className="flex items-center gap-2">
+        <li>
           <span aria-hidden="true">/</span>
-          <span aria-current="page" className="max-w-[220px] truncate text-fog">
-            {title}
-          </span>
+          <span aria-current="page">{title}</span>
         </li>
       </ol>
     </nav>
@@ -111,7 +106,7 @@ export default async function ArticlePage({ params }: PageProps) {
   ];
 
   return (
-    <>
+    <div className="s6 s6-home s6-insights">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -119,32 +114,36 @@ export default async function ArticlePage({ params }: PageProps) {
 
       <BreadcrumbNav title={article.title} />
 
-      <header className="container-x pb-10 pt-10 md:pb-14">
-        <div className="max-w-4xl">
-          <Link
-            href="/insights"
-            className="font-mono text-[11px] uppercase tracking-[0.2em] text-sage transition-colors hover:text-sage-bright"
-          >
-            {article.category}
-          </Link>
-          <h1 className="mt-6 font-display text-4xl font-semibold leading-[1.05] tracking-tight text-bone md:text-6xl">
-            {article.title}
-          </h1>
-          <p className="body-lg mt-7 max-w-3xl text-fog">{article.excerpt}</p>
-          <div className="mt-8">
-            <ArticleMeta article={article} />
-          </div>
+      <header className="s6-container s6-article-header">
+        <div className="s6-article-measure">
+          <Reveal entrance>
+            <Link href="/insights" className="s6-article-category-link">
+              {article.category}
+            </Link>
+          </Reveal>
+          <Reveal entrance delay={0.08}>
+            <h1 className="s6-article-h1">{article.title}</h1>
+          </Reveal>
+          <Reveal entrance delay={0.16}>
+            <p className="s6-article-excerpt">{article.excerpt}</p>
+          </Reveal>
+          <Reveal entrance delay={0.22}>
+            <div className="mt-8">
+              <ArticleMeta article={article} />
+            </div>
+          </Reveal>
         </div>
       </header>
 
-      <div className="container-x grid gap-14 pb-16 md:pb-24 lg:grid-cols-12">
-        <div className="min-w-0 lg:col-span-8">
-          <div className="border-t border-line pt-10">
-            <ArticleContent blocks={article.content} />
-          </div>
+      <div className="s6-container s6-article-layout">
+        <div className="min-w-0">
+          <Reveal delay={0.1} effect="line" className="s6-drawn-divider s6-article-divider">
+            <span />
+          </Reveal>
+          <ArticleContent blocks={article.content} />
         </div>
-        <aside className="lg:col-span-4">
-          <div className="lg:sticky lg:top-28">
+        <aside>
+          <div className="s6-article-toc-sticky">
             <ArticleTOC headings={headings} />
           </div>
         </aside>
@@ -152,6 +151,6 @@ export default async function ArticlePage({ params }: PageProps) {
 
       <RelatedContent article={article} />
       <ArticleCTA />
-    </>
+    </div>
   );
 }

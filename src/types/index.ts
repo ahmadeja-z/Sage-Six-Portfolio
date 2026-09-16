@@ -61,6 +61,16 @@ export type LeadPayload = {
   websiteLink: string;
   budget: string;
   timing: string;
+  // Off-screen field a real visitor never fills. Optional so existing
+  // callers (e.g. the assistant's quick-lead form) keep working unchanged.
+  honeypot?: string;
+  // Client-generated id reused across retries of the same enquiry so a
+  // double-click or network retry can't send two emails. Optional for the
+  // same reason as `honeypot`.
+  submissionId?: string;
+  // Path the enquiry was submitted from (e.g. "/contact"), attached
+  // automatically by submitLead() rather than passed by each caller.
+  page?: string;
 };
 
 export type EnquiryType = "new-project" | "existing-support" | "developer-support" | "general";

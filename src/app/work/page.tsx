@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
-import { getWorkProjects } from "@/data/projects";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { WorkProjectSection } from "@/components/projects/WorkProjectSection";
-import { Reveal } from "@/components/ui/Reveal";
-import { ProjectCTA } from "@/components/projects/ProjectCTA";
 import { siteConfig } from "@/lib/site";
+import { getWorkShowcaseProjects } from "@/lib/work-projects";
+import { WorkPageContent } from "@/components/work/WorkPageContent";
 
 export const metadata: Metadata = {
   title: "Work — Software Development Case Studies",
@@ -27,32 +24,39 @@ export const metadata: Metadata = {
 };
 
 export default function WorkPage() {
-  const projects = getWorkProjects();
+  const showcaseProjects = getWorkShowcaseProjects();
+
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: `${siteConfig.url}/` },
+        { "@type": "ListItem", position: 2, name: "Work", item: `${siteConfig.url}/work` },
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: "Sage Six — Software Development Case Studies",
+      description: metadata.description,
+      url: `${siteConfig.url}/work`,
+      isPartOf: { "@type": "WebSite", name: "Sage Six", url: siteConfig.url },
+      hasPart: showcaseProjects.map(({ project }) => ({
+        "@type": "CreativeWork",
+        name: project.title,
+        url: `${siteConfig.url}/work/${project.slug}`,
+      })),
+    },
+  ];
 
   return (
     <>
-      <PageHeader
-        eyebrow="Case Studies"
-        lines={["Selected Products and", "Digital Experiences"]}
-        description="Explore Sage Six case studies across healthcare, commerce, delivery and manufacturing — including the challenges, product decisions and systems behind each experience."
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-
-      {projects.length > 0 ? (
-        projects.map((project, i) => (
-          <WorkProjectSection key={project.slug} project={project} index={i} />
-        ))
-      ) : (
-        <div className="container-x">
-          <Reveal>
-            <p className="max-w-xl py-16 text-fog">
-              Case studies are being published. New projects will appear here as
-              they are documented.
-            </p>
-          </Reveal>
-        </div>
-      )}
-
-      <ProjectCTA />
+      <WorkPageContent showcaseProjects={showcaseProjects} />
     </>
   );
 }

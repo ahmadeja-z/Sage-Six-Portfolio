@@ -55,7 +55,7 @@ export const LIMITS = {
 } as const;
 
 export const LINK_ROUTES: Record<AssistantLinkId, string> = {
-  services: "/services",
+  services: "/expertise",
   work: "/work",
   contact: "/contact",
   "leicester-medical-society": "/work/leicester-medical-society",

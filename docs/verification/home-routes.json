@@ -1,0 +1,46 @@
+{
+  "assistant": true,
+  "routes": [
+    {
+      "url": "/contact",
+      "status": 200
+    },
+    {
+      "url": "/services",
+      "status": 200
+    },
+    {
+      "url": "/about",
+      "status": 200
+    },
+    {
+      "url": "/insights",
+      "status": 200
+    },
+    {
+      "url": "/work",
+      "status": 200
+    },
+    {
+      "url": "/work/speezu",
+      "status": 200
+    },
+    {
+      "url": "/work/leicester-medical-society",
+      "status": 200
+    },
+    {
+      "url": "/work/durafoam-3d-foam-configurator-shopify",
+      "status": 200
+    },
+    {
+      "url": "/images/sagesix-icon.svg",
+      "status": 200
+    },
+    {
+      "url": "/images/sagesix-apple-icon-new.png",
+      "status": 200
+    }
+  ],
+  "consoleErrors": []
+}

@@ -48,7 +48,7 @@ export function Services() {
 
         <Reveal delay={0.1}>
           <Link
-            href="/services"
+            href="/expertise"
             className="group mt-10 inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-fog transition-colors hover:text-sage"
           >
             Explore our services

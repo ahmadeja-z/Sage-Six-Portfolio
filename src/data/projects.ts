@@ -9,7 +9,7 @@ const img = (
 ): ProjectImage => ({ src: `${base}/${file}`, alt, width, height });
 
 const speezuImg = (file: string, alt: string, width = 1672, height = 941) =>
-  img("/images/projects/speezu", file, alt, width, height);
+  img("/images/case-studies/speezu", file, alt, width, height);
 
 const durafoamImg = (file: string, alt: string, width = 1586, height = 992) =>
   img("/images/case-studies/durafoam", file, alt, width, height);

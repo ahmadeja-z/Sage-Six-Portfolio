@@ -1,0 +1,95 @@
+{
+  "results": [
+    {
+      "route": "/",
+      "direct": true,
+      "refresh": true,
+      "active": "/"
+    },
+    {
+      "route": "/work",
+      "direct": true,
+      "refresh": true,
+      "active": "/work"
+    },
+    {
+      "route": "/work/speezu",
+      "direct": true,
+      "refresh": true,
+      "active": "/work"
+    },
+    {
+      "route": "/work/leicester-medical-society",
+      "direct": true,
+      "refresh": true,
+      "active": "/work"
+    },
+    {
+      "route": "/work/durafoam-3d-foam-configurator-shopify",
+      "direct": true,
+      "refresh": true,
+      "active": "/work"
+    },
+    {
+      "route": "/services",
+      "direct": true,
+      "refresh": true,
+      "active": "/services"
+    },
+    {
+      "route": "/about",
+      "direct": true,
+      "refresh": true,
+      "active": "/about"
+    },
+    {
+      "route": "/insights",
+      "direct": true,
+      "refresh": true,
+      "active": "/insights"
+    },
+    {
+      "route": "/insights/mobile-app-development-cost",
+      "direct": true,
+      "refresh": true,
+      "active": "/insights"
+    },
+    {
+      "route": "/contact",
+      "direct": true,
+      "refresh": true,
+      "active": "/contact"
+    },
+    {
+      "width": 320,
+      "layout": true,
+      "keyboard": true
+    },
+    {
+      "width": 375,
+      "layout": true,
+      "keyboard": true
+    },
+    {
+      "width": 768,
+      "layout": true,
+      "keyboard": true
+    },
+    {
+      "width": 1024,
+      "layout": true,
+      "keyboard": false
+    },
+    {
+      "width": 1440,
+      "layout": true,
+      "keyboard": false
+    }
+  ],
+  "clientNavigation": true,
+  "persistentHeader": true,
+  "mobileSelection": true,
+  "reducedMotion": true,
+  "touch": true,
+  "errors": []
+}

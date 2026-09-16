@@ -1,0 +1,117 @@
+{
+  "mode": "local production build",
+  "rows": [
+    {
+      "width": 320,
+      "overflow": false,
+      "brokenImages": [],
+      "services": 6,
+      "insights": 4,
+      "steps": 6,
+      "reviewsVisible": false
+    },
+    {
+      "width": 375,
+      "overflow": false,
+      "brokenImages": [],
+      "services": 6,
+      "insights": 4,
+      "steps": 6,
+      "reviewsVisible": false
+    },
+    {
+      "width": 430,
+      "overflow": false,
+      "brokenImages": [],
+      "services": 6,
+      "insights": 4,
+      "steps": 6,
+      "reviewsVisible": false
+    },
+    {
+      "width": 768,
+      "overflow": false,
+      "brokenImages": [],
+      "services": 6,
+      "insights": 4,
+      "steps": 6,
+      "reviewsVisible": false
+    },
+    {
+      "width": 1024,
+      "overflow": false,
+      "brokenImages": [],
+      "services": 6,
+      "insights": 4,
+      "steps": 6,
+      "reviewsVisible": false
+    },
+    {
+      "width": 1280,
+      "overflow": false,
+      "brokenImages": [],
+      "services": 6,
+      "insights": 4,
+      "steps": 6,
+      "reviewsVisible": false
+    },
+    {
+      "width": 1440,
+      "overflow": false,
+      "brokenImages": [],
+      "services": 6,
+      "insights": 4,
+      "steps": 6,
+      "reviewsVisible": false
+    },
+    {
+      "width": 1600,
+      "overflow": false,
+      "brokenImages": [],
+      "services": 6,
+      "insights": 4,
+      "steps": 6,
+      "reviewsVisible": false
+    },
+    {
+      "width": 1920,
+      "overflow": false,
+      "brokenImages": [],
+      "services": 6,
+      "insights": 4,
+      "steps": 6,
+      "reviewsVisible": false
+    }
+  ],
+  "ai": {
+    "reduced": "false",
+    "running": "true",
+    "selection": "AI automation",
+    "paused": "false",
+    "offscreen": "false",
+    "dynamicReduced": "false"
+  },
+  "menu": {
+    "trapped": true,
+    "restored": true
+  },
+  "articles": [
+    {
+      "href": "/insights/admin-dashboard-development-guide",
+      "status": 200
+    },
+    {
+      "href": "/insights/flutter-for-business-apps",
+      "status": 200
+    },
+    {
+      "href": "/insights/app-website-maintenance-checklist",
+      "status": 200
+    },
+    {
+      "href": "/insights/flutter-vs-react-native",
+      "status": 200
+    }
+  ],
+  "errors": []
+}

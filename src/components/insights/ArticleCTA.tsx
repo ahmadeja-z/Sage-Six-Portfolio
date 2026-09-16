@@ -1,53 +1,84 @@
+"use client";
+
 import Link from "next/link";
+import { motion } from "motion/react";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { Reveal } from "@/components/ui/Reveal";
+import { Reveal, motionTokens } from "@/components/home/motion";
+
+// Closing hexagon motif — the same six-facet pattern already duplicated once
+// per page (home, expertise, case studies, work, about, contact) for their
+// own closing CTAs.
+const CTA_HEX_CENTER = { x: 170, y: 170 };
+const CTA_HEX_VERTICES = [
+  [170, 10],
+  [308.56, 90],
+  [308.56, 250],
+  [170, 330],
+  [31.44, 250],
+  [31.44, 90],
+] as const;
+const CTA_HEX_COLORS = ["#14a89d", "#282264", "#273990", "#0f75bd", "#24aae3", "#662d90"];
+
+function CtaMotif() {
+  const { x: cx, y: cy } = CTA_HEX_CENTER;
+  const facets = CTA_HEX_VERTICES.map((point, i) => {
+    const next = CTA_HEX_VERTICES[(i + 1) % CTA_HEX_VERTICES.length];
+    return `M${cx},${cy} L${point[0]},${point[1]} L${next[0]},${next[1]} Z`;
+  });
+  return (
+    <svg className="s6-cta-motif" viewBox="0 0 340 340" aria-hidden="true">
+      {facets.map((d, i) => (
+        <motion.path
+          key={i}
+          d={d}
+          fill={CTA_HEX_COLORS[i]}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 0.22 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.6, delay: 0.1 + i * 0.06 }}
+        />
+      ))}
+      <motion.path
+        d={`M${CTA_HEX_VERTICES[1][0]},${CTA_HEX_VERTICES[1][1]} L${CTA_HEX_VERTICES[2][0]},${CTA_HEX_VERTICES[2][1]}`}
+        fill="none"
+        stroke="var(--s6-cyan)"
+        strokeWidth={2}
+        strokeLinecap="round"
+        initial={{ pathLength: 0, opacity: 0 }}
+        whileInView={{ pathLength: 1, opacity: 0.9 }}
+        viewport={{ once: true, amount: 0.4 }}
+        transition={{ duration: 0.7, delay: 0.55, ease: motionTokens.easing.gentle }}
+      />
+    </svg>
+  );
+}
 
 export function ArticleCTA() {
   return (
-    <section
-      className="relative overflow-hidden border-t border-line py-20 md:py-28"
-      aria-label="Start a project"
-    >
-      <div
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[50vh] w-[50vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-sage/[0.05] blur-[110px]"
-        aria-hidden="true"
-      />
-      <div className="container-x relative">
-        <Reveal>
-          <p className="eyebrow mb-6">Build with Sage Six</p>
-          <h2 className="display-3 max-w-3xl font-display text-bone">
-            Planning a digital product?
-          </h2>
-          <p className="body-lg mt-6 max-w-2xl text-fog">
-            Sage Six designs and develops mobile applications, web platforms and
-            connected software systems built around real business requirements.
-          </p>
-        </Reveal>
-        <Reveal delay={0.15}>
-          <div className="mt-10 flex flex-wrap items-center gap-5">
-            <Link
-              href="/contact"
-              className="group inline-flex items-center gap-2.5 bg-bone px-7 py-4 font-mono text-xs uppercase tracking-[0.18em] text-ink transition-colors duration-300 hover:bg-sage-bright"
-            >
-              Start a Project
-              <ArrowUpRight
-                className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                strokeWidth={1.75}
-              />
-            </Link>
-            <Link
-              href="/work"
-              className="group inline-flex items-center gap-2 border border-line px-7 py-4 font-mono text-xs uppercase tracking-[0.18em] text-bone transition-colors duration-300 hover:border-sage hover:text-sage"
-            >
-              Explore Our Work
-              <ArrowRight
-                className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
-                strokeWidth={1.75}
-              />
-            </Link>
+    <section className="s6-container s6-cta-wrap" aria-label="Start a project">
+      <Reveal>
+        <div className="s6-cta">
+          <CtaMotif />
+          <div>
+            <p className="s6-eyebrow">Build with Sage Six</p>
+            <h2>Planning a digital product?</h2>
+            <p>
+              Sage Six designs and develops mobile applications, web platforms and
+              connected software systems built around real business requirements.
+            </p>
           </div>
-        </Reveal>
-      </div>
+          <Reveal delay={0.15} className="s6-cta-actions">
+            <Link href="/contact" className="s6-button s6-button-white">
+              Start a Project
+              <ArrowUpRight size={16} aria-hidden="true" />
+            </Link>
+            <Link href="/work" className="s6-button s6-button-outline">
+              Explore Our Work
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+          </Reveal>
+        </div>
+      </Reveal>
     </section>
   );
 }

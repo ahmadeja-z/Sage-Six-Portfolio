@@ -16,8 +16,8 @@ export const siteConfig = {
   ],
   nav: [
     { label: "Work", href: "/work" },
-    { label: "Services", href: "/services" },
-    { label: "About", href: "/about" },
+    { label: "Expertise", href: "/expertise" },
+    { label: "Company", href: "/company" },
     { label: "Insights", href: "/insights" },
     { label: "Contact", href: "/contact" },
   ] as NavItem[],

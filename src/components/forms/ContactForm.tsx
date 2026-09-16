@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { ArrowUpRight, Check, ChevronDown } from "lucide-react";
@@ -35,6 +35,11 @@ const emptyForm: FormState = {
 
 type Errors = Partial<Record<keyof FormState, string>>;
 
+function makeSubmissionId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return `c-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 const serviceOptions = [
   { value: "", label: "Not sure yet" },
   ...services.map((s) => ({ value: s.anchor, label: s.title })),
@@ -62,8 +67,23 @@ export function ContactForm({
   const [showValidationSummary, setShowValidationSummary] = useState(false);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [showDetails, setShowDetails] = useState(false);
+  // Honeypot: off-screen field a real visitor never sees or fills. If it
+  // arrives populated, we quietly no-op instead of calling the API — bots
+  // that fill every field get a fake success, not a hint they were caught.
+  // The server enforces this independently for anything posted directly to
+  // the API, bypassing this component entirely.
+  const [honeypot, setHoneypot] = useState("");
+  // Reused across retries of the same enquiry (double-click, network retry)
+  // so the server can de-duplicate via an idempotency key. A fresh id is
+  // generated once the enquiry is actually sent, for the next one.
+  const [submissionId, setSubmissionId] = useState(() => makeSubmissionId());
   const summaryRef = useRef<HTMLDivElement>(null);
+  const successHeadingRef = useRef<HTMLHeadingElement>(null);
   const reduce = useReducedMotion();
+
+  useEffect(() => {
+    if (status.kind === "success") successHeadingRef.current?.focus();
+  }, [status.kind]);
 
   function setField<K extends keyof FormState>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -94,6 +114,13 @@ export function ContactForm({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Belt-and-suspenders: guards against a resubmit even if the button's
+    // disabled state hasn't re-rendered yet (e.g. a fast repeat Enter key).
+    if (status.kind === "loading") return;
+    if (honeypot) {
+      setStatus({ kind: "success" });
+      return;
+    }
     if (!validate()) return;
     setStatus({ kind: "loading" });
 
@@ -107,12 +134,18 @@ export function ContactForm({
       websiteLink: showDetails ? form.websiteLink.trim() : "",
       budget: showDetails ? form.budget.trim() : "",
       timing: showDetails ? form.timing.trim() : "",
+      honeypot,
+      submissionId,
     });
 
     if (result.ok) {
       setStatus({ kind: "success" });
+      setSubmissionId(makeSubmissionId());
     } else {
       setStatus({ kind: "error", message: result.message, code: result.code });
+      if (result.field && result.field in emptyForm) {
+        setErrors((e) => ({ ...e, [result.field as keyof FormState]: result.message }));
+      }
       summaryRef.current?.focus();
     }
   }
@@ -122,40 +155,34 @@ export function ContactForm({
     setErrors({});
     setStatus({ kind: "idle" });
     setShowDetails(false);
+    setHoneypot("");
   }
 
   if (status.kind === "success") {
     return (
-      <div className="flex h-full min-h-[520px] flex-col items-center justify-center border border-line bg-ink-2 p-10 text-center">
+      <div className="s6-contact-card flex min-h-[520px] flex-col items-center justify-center p-10 text-center">
         <motion.div
           initial={reduce ? { opacity: 0 } : { scale: 0.6, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 220, damping: 16 }}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-sage"
+          className="s6-contact-success-icon"
           aria-hidden="true"
         >
-          <Check className="h-7 w-7 text-ink" strokeWidth={2.5} />
+          <Check className="h-7 w-7" strokeWidth={2.5} />
         </motion.div>
-        <h3 className="mt-7 font-display text-3xl font-semibold tracking-tight text-bone">
+        <h2 ref={successHeadingRef} tabIndex={-1} className="mt-7">
           Thank you for getting in touch.
-        </h3>
-        <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-fog">
+        </h2>
+        <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-[color:var(--s6-body)]">
           Your enquiry has been submitted. We&apos;ll review the details and
           respond using the email address you provided.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href="/work"
-            className="inline-flex items-center gap-2 border border-line px-6 py-3.5 font-mono text-xs uppercase tracking-[0.18em] text-bone transition-colors duration-300 hover:border-sage hover:text-sage"
-          >
+          <Link href="/work" className="s6-button s6-button-outline">
             Explore Our Work
             <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} />
           </Link>
-          <button
-            type="button"
-            onClick={reset}
-            className="font-mono text-[11px] uppercase tracking-[0.2em] text-sage transition-colors hover:text-sage-bright"
-          >
+          <button type="button" onClick={reset} className="s6-text-link">
             Send Another Enquiry
           </button>
         </div>
@@ -166,29 +193,44 @@ export function ContactForm({
   const messageHelper = enquiryMessageHelpers[form.enquiryType] ?? enquiryMessageHelpers.new;
   const inputClass = (hasError?: string) =>
     cn(
-      "w-full border bg-ink-3 px-4 py-3.5 text-sm text-bone placeholder:text-mist transition-colors duration-300 focus:outline-none",
-      hasError ? "border-red-400/50" : "border-line focus:border-sage",
+      "w-full rounded-[10px] border bg-white px-4 py-3.5 text-[15px] text-[color:var(--s6-navy)] placeholder:text-[color:var(--s6-muted)] transition-colors duration-200",
+      hasError
+        ? "border-[#D92D20]"
+        : "border-[color:var(--s6-border)] focus:border-[color:var(--s6-blue)]",
     );
-  const labelClass = "mb-2 block font-mono text-[10px] uppercase tracking-[0.2em] text-mist";
+  const labelClass = "mb-2 block text-[13px] font-medium text-[color:var(--s6-navy)]";
 
   return (
-    <form onSubmit={onSubmit} noValidate className="border border-line bg-ink-2 p-6 md:p-10">
-      <h2 className="font-display text-2xl font-semibold tracking-tight text-bone md:text-3xl">
-        Tell us how we can help.
-      </h2>
-      <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-fog">
+    <form onSubmit={onSubmit} noValidate className="s6-contact-card p-6 md:p-10">
+      <h2 className="s6-contact-form-heading">Tell us how we can help.</h2>
+      <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-[color:var(--s6-body)]">
         A short outline is enough to start. Share what you want to achieve, what
         already exists and where you need help.
       </p>
 
-      <div ref={summaryRef} tabIndex={-1} aria-live="polite">
+      {/* Honeypot — hidden off-screen, never presented to sighted or keyboard users. */}
+      <div className="s6-hp" aria-hidden="true">
+        <label htmlFor="company_url">Leave this field blank</label>
+        <input
+          id="company_url"
+          name="company_url"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+        />
+      </div>
+
+      <div ref={summaryRef} tabIndex={-1} aria-live="polite" className="outline-none">
         <AnimatePresence>
           {showValidationSummary && status.kind !== "error" && (
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="mt-5 border border-red-400/50 bg-ink-3 p-4 text-sm text-red-300"
+              transition={{ duration: 0.3 }}
+              className="s6-contact-alert mt-5"
               role="alert"
             >
               Please check the highlighted fields.
@@ -199,7 +241,8 @@ export function ContactForm({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="mt-5 border border-red-400/50 bg-ink-3 p-4 text-sm text-red-300"
+              transition={{ duration: 0.3 }}
+              className="s6-contact-alert mt-5"
               role="alert"
             >
               {status.message}
@@ -215,10 +258,8 @@ export function ContactForm({
             <label
               key={type.id}
               className={cn(
-                "cursor-pointer border px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] transition-colors duration-300",
-                form.enquiryType === type.id
-                  ? "border-sage bg-sage text-ink"
-                  : "border-line text-fog hover:border-sage hover:text-sage",
+                "s6-contact-pill",
+                form.enquiryType === type.id && "s6-contact-pill-active",
               )}
             >
               <input
@@ -238,7 +279,7 @@ export function ContactForm({
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
         <div>
           <label htmlFor="name" className={labelClass}>
-            Full name <span className="text-sage">*</span>
+            Full name <span className="text-[color:var(--s6-blue)]">*</span>
           </label>
           <input
             id="name"
@@ -252,14 +293,14 @@ export function ContactForm({
             aria-describedby={errors.name ? "name-error" : undefined}
           />
           {errors.name && (
-            <p id="name-error" className="mt-2 text-xs text-red-300">
+            <p id="name-error" className="s6-contact-field-error">
               {errors.name}
             </p>
           )}
         </div>
         <div>
           <label htmlFor="email" className={labelClass}>
-            Email address <span className="text-sage">*</span>
+            Email address <span className="text-[color:var(--s6-blue)]">*</span>
           </label>
           <input
             id="email"
@@ -273,14 +314,15 @@ export function ContactForm({
             aria-describedby={errors.email ? "email-error" : undefined}
           />
           {errors.email && (
-            <p id="email-error" className="mt-2 text-xs text-red-300">
+            <p id="email-error" className="s6-contact-field-error">
               {errors.email}
             </p>
           )}
         </div>
         <div>
           <label htmlFor="company" className={labelClass}>
-            Company or organisation <span className="text-mist">(optional)</span>
+            Company or organisation{" "}
+            <span className="text-[color:var(--s6-muted)]">(optional)</span>
           </label>
           <input
             id="company"
@@ -294,7 +336,8 @@ export function ContactForm({
         </div>
         <div>
           <label htmlFor="service" className={labelClass}>
-            Service of interest <span className="text-mist">(optional)</span>
+            Service of interest{" "}
+            <span className="text-[color:var(--s6-muted)]">(optional)</span>
           </label>
           <select
             id="service"
@@ -313,7 +356,7 @@ export function ContactForm({
 
       <div className="mt-8">
         <label htmlFor="message" className={labelClass}>
-          Message <span className="text-sage">*</span>
+          Message <span className="text-[color:var(--s6-blue)]">*</span>
         </label>
         <textarea
           id="message"
@@ -325,15 +368,15 @@ export function ContactForm({
           aria-invalid={!!errors.message}
           aria-describedby={errors.message ? "message-error message-help" : "message-help"}
         />
-        <p id="message-help" className="mt-2 text-xs leading-relaxed text-mist">
+        <p id="message-help" className="mt-2 text-xs leading-relaxed text-[color:var(--s6-muted)]">
           {messageHelper}
         </p>
         {errors.message && (
-          <p id="message-error" className="mt-2 text-xs text-red-300">
+          <p id="message-error" className="s6-contact-field-error">
             {errors.message}
           </p>
         )}
-        <p className="mt-3 text-xs leading-relaxed text-mist">
+        <p className="mt-3 text-xs leading-relaxed text-[color:var(--s6-muted)]">
           Please leave passwords, API keys and other sensitive information out of
           this form.
         </p>
@@ -345,7 +388,7 @@ export function ContactForm({
           onClick={() => setShowDetails((v) => !v)}
           aria-expanded={showDetails}
           aria-controls="optional-details"
-          className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-sage transition-colors hover:text-sage-bright"
+          className="s6-text-link"
         >
           Add more details (optional)
           <ChevronDown
@@ -379,7 +422,7 @@ export function ContactForm({
                 </div>
                 <div>
                   <label htmlFor="budget" className={labelClass}>
-                    Budget <span className="text-mist">(optional)</span>
+                    Budget <span className="text-[color:var(--s6-muted)]">(optional)</span>
                   </label>
                   <input
                     id="budget"
@@ -392,7 +435,8 @@ export function ContactForm({
                 </div>
                 <div>
                   <label htmlFor="timing" className={labelClass}>
-                    Preferred timing <span className="text-mist">(optional)</span>
+                    Preferred timing{" "}
+                    <span className="text-[color:var(--s6-muted)]">(optional)</span>
                   </label>
                   <input
                     id="timing"
@@ -409,7 +453,7 @@ export function ContactForm({
         </AnimatePresence>
       </div>
 
-      <p className="mt-6 text-xs leading-relaxed text-mist">
+      <p className="mt-6 text-xs leading-relaxed text-[color:var(--s6-muted)]">
         We&apos;ll use these details to respond to your enquiry.
       </p>
 
@@ -417,11 +461,14 @@ export function ContactForm({
         <button
           type="submit"
           disabled={status.kind === "loading"}
-          className="group inline-flex items-center justify-center gap-2.5 bg-bone px-8 py-4 font-mono text-xs uppercase tracking-[0.18em] text-ink transition-colors duration-300 hover:bg-sage-bright disabled:cursor-not-allowed disabled:opacity-60"
+          className="s6-button group min-w-[168px] disabled:cursor-not-allowed"
         >
           {status.kind === "loading" ? (
             <>
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink/30 border-t-ink" />
+              <span
+                className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white"
+                aria-hidden="true"
+              />
               Sending…
             </>
           ) : (

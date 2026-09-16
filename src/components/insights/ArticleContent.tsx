@@ -2,47 +2,35 @@ import type { ContentBlock } from "@/types";
 
 export function ArticleContent({ blocks }: { blocks: ContentBlock[] }) {
   return (
-    <div className="space-y-6">
+    <div className="s6-article-prose">
       {blocks.map((block, i) => {
         switch (block.type) {
           case "h2":
             return (
-              <h2
-                key={i}
-                id={slugify(block.text)}
-                className="scroll-mt-28 pt-8 font-display text-2xl font-medium tracking-tight text-bone md:text-3xl"
-              >
+              <h2 key={i} id={slugify(block.text)} className="s6-article-h2">
                 {block.text}
               </h2>
             );
           case "h3":
             return (
-              <h3
-                key={i}
-                className="pt-2 font-display text-xl font-medium tracking-tight text-bone"
-              >
+              <h3 key={i} className="s6-article-h3">
                 {block.text}
               </h3>
             );
           case "ul":
             return (
-              <ul key={i} className="space-y-2.5">
+              <ul key={i} className="s6-article-list">
                 {block.items.map((item) => (
-                  <li key={item} className="flex gap-3 text-[15px] leading-relaxed text-fog md:text-base">
-                    <span className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-sage/70" />
-                    {item}
-                  </li>
+                  <li key={item}>{item}</li>
                 ))}
               </ul>
             );
           case "ol":
             return (
-              <ol key={i} className="space-y-2.5">
+              <ol key={i} className="s6-article-list s6-article-list-ordered">
                 {block.items.map((item, n) => (
-                  <li key={item} className="flex gap-3 text-[15px] leading-relaxed text-fog md:text-base">
-                    <span className="w-6 shrink-0 font-mono text-[11px] tracking-[0.2em] text-sage/70">
-                      {String(n + 1).padStart(2, "0")}
-                    </span>
+                  <li key={item}>
+                    <span className="s6-article-list-index">{String(n + 1).padStart(2, "0")}</span>
                     {item}
                   </li>
                 ))}
@@ -50,29 +38,27 @@ export function ArticleContent({ blocks }: { blocks: ContentBlock[] }) {
             );
           case "links":
             return (
-              <ul key={i} className="space-y-2.5">
+              <ul key={i} className="s6-article-links">
                 {block.items.map((item) => (
-                  <li key={item.href + item.text} className="flex flex-col gap-1">
+                  <li key={item.href + item.text}>
                     <a
                       href={item.href}
                       {...(item.href.startsWith("http")
                         ? { target: "_blank", rel: "noopener noreferrer" }
                         : {})}
-                      className="inline-flex w-fit items-center gap-2 font-mono text-xs uppercase tracking-[0.16em] text-sage transition-colors duration-300 hover:text-sage-bright"
+                      className="s6-article-link"
                     >
                       {item.text}
                       <span aria-hidden="true">→</span>
                     </a>
-                    {item.note && (
-                      <span className="text-sm leading-relaxed text-mist">{item.note}</span>
-                    )}
+                    {item.note && <span className="s6-article-link-note">{item.note}</span>}
                   </li>
                 ))}
               </ul>
             );
           default:
             return (
-              <p key={i} className="text-[16px] leading-[1.8] text-fog md:text-[17px]">
+              <p key={i} className="s6-article-p">
                 {block.text}
               </p>
             );

@@ -2,15 +2,21 @@ import { describe, expect, it } from "vitest";
 import { buildEnquiryEmail, buildEnquirySubject } from "@/lib/email";
 
 describe("buildEnquirySubject", () => {
-  it("uses the approved enquiry and service labels", () => {
-    expect(buildEnquirySubject("new-project", "mobile-app-development")).toBe(
-      "New Sage Six Enquiry — New project — Mobile App Development",
+  it("contains the visitor's name and enquiry type", () => {
+    expect(buildEnquirySubject("Jane Doe", "", "new-project")).toBe(
+      "New Sage Six Enquiry from Jane Doe — New project",
     );
   });
 
-  it("falls back to general enquiry and not specified", () => {
-    expect(buildEnquirySubject("bogus", "bogus")).toBe(
-      "New Sage Six Enquiry — General Enquiry — Not specified",
+  it("prefers the company name alongside the visitor when provided", () => {
+    expect(buildEnquirySubject("Jane Doe", "Acme Ltd", "existing-support")).toBe(
+      "New Sage Six Enquiry from Jane Doe (Acme Ltd) — Existing product support",
+    );
+  });
+
+  it("falls back to general enquiry for an unrecognised type", () => {
+    expect(buildEnquirySubject("Jane Doe", "", "bogus")).toBe(
+      "New Sage Six Enquiry from Jane Doe — General Enquiry",
     );
   });
 });
@@ -55,5 +61,28 @@ describe("buildEnquiryEmail", () => {
   it("keeps the recipient out of the visitor-controlled body", () => {
     const { text } = buildEnquiryEmail(lead, "2026-09-10T09:00:00.000Z");
     expect(text.toLowerCase()).not.toContain("to: hello@sagesix.co.uk");
+  });
+
+  it("includes the source page when provided, and a fallback otherwise", () => {
+    const { text: withPage } = buildEnquiryEmail(
+      { ...lead, page: "/contact" },
+      "2026-09-10T09:00:00.000Z",
+    );
+    expect(withPage).toContain("Source page: /contact");
+
+    const { text: withoutPage } = buildEnquiryEmail(lead, "2026-09-10T09:00:00.000Z");
+    expect(withoutPage).toContain("Source page: Not recorded");
+  });
+
+  it("tells the reader they can reply directly to reach the visitor", () => {
+    const { html, text } = buildEnquiryEmail(lead, "2026-09-10T09:00:00.000Z");
+    expect(text).toContain("Reply directly to this email");
+    expect(html).toContain("Reply directly to this email");
+  });
+
+  it("never renders undefined as literal text for an absent optional field", () => {
+    const { html, text } = buildEnquiryEmail(lead, "2026-09-10T09:00:00.000Z");
+    expect(html).not.toContain("undefined");
+    expect(text).not.toContain("undefined");
   });
 });

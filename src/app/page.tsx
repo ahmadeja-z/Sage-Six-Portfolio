@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
-import { Hero } from "@/components/hero/Hero";
-import { SelectedWork } from "@/components/sections/SelectedWork";
-import { Services } from "@/components/sections/Services";
-import { AISection } from "@/components/sections/AISection";
-import { Process } from "@/components/sections/Process";
-import { About } from "@/components/sections/About";
-import { Technology } from "@/components/sections/Technology";
-import { Insights } from "@/components/sections/Insights";
-import { FinalCTA } from "@/components/sections/FinalCTA";
+import { HomePageContent } from "@/components/home/HomePageContent";
+import { getPublishedInsights } from "@/data/insights";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -31,17 +24,23 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return (
-    <>
-      <Hero />
-      <SelectedWork />
-      <Services />
-      <AISection />
-      <Process />
-      <About />
-      <Technology />
-      <Insights />
-      <FinalCTA />
-    </>
-  );
+  const selectedSlugs = [
+    "admin-dashboard-development-guide",
+    "flutter-for-business-apps",
+    "app-website-maintenance-checklist",
+    "flutter-vs-react-native",
+  ];
+  const articles = selectedSlugs.flatMap((slug) => {
+    const article = getPublishedInsights().find((item) => item.slug === slug);
+    return article
+      ? [
+          {
+            title: article.title,
+            slug: article.slug,
+            category: article.category,
+          },
+        ]
+      : [];
+  });
+  return <HomePageContent articles={articles} />;
 }

@@ -1,9 +1,12 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "motion/react";
+import { usePathname } from "next/navigation";
 
 export default function Template({ children }: { children: React.ReactNode }) {
   const reduce = useReducedMotion();
+  const pathname = usePathname();
+  if (pathname === "/") return children;
 
   return (
     <motion.div

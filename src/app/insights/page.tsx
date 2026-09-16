@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import { getPublishedInsights, getFeaturedInsight } from "@/data/insights";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { ArticleCard } from "@/components/insights/ArticleCard";
-import { InsightFilter } from "@/components/insights/InsightFilter";
-import { Reveal } from "@/components/ui/Reveal";
-import { ArticleCTA } from "@/components/insights/ArticleCTA";
+import { InsightsPageContent } from "@/components/insights/InsightsPageContent";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -55,27 +51,7 @@ export default function InsightsPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-
-      <PageHeader
-        eyebrow="Insights"
-        lines={["Insights on Software,", "Product Design and", "Digital Growth"]}
-        description="Practical thinking from Sage Six on mobile applications, web platforms, artificial intelligence and building digital products that solve real business problems."
-      />
-
-      <section className="container-x py-16 md:py-24" aria-label="Published insights">
-        {featured && (
-          <ArticleCard article={featured} variant="featured" />
-        )}
-
-        <div className="mt-16 md:mt-20">
-          <Reveal>
-            <p className="eyebrow mb-6">Latest Insights</p>
-          </Reveal>
-          <InsightFilter articles={featured ? rest : published} />
-        </div>
-      </section>
-
-      <ArticleCTA />
+      <InsightsPageContent featured={featured} articles={featured ? rest : published} />
     </>
   );
 }

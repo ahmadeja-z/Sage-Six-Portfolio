@@ -13,6 +13,7 @@ export type LeadResult = {
   ok: boolean;
   code: LeadResultCode;
   message: string;
+  field?: string;
 };
 
 const TIMEOUT_MS = 20000;
@@ -25,16 +26,19 @@ export async function submitLead(payload: LeadPayload): Promise<LeadResult> {
     const res = await fetch("/api/leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...payload,
+        page: typeof window !== "undefined" ? window.location.pathname : payload.page,
+      }),
       signal: controller.signal,
     });
     clearTimeout(timer);
 
     const data = (await res.json().catch(() => null)) as
-      | { code?: string; message?: string }
+      | { success?: boolean; code?: string; message?: string; field?: string; id?: string }
       | null;
 
-    if (res.ok) {
+    if (res.ok && data?.success) {
       return { ok: true, code: "ok", message: "Your enquiry has been submitted." };
     }
 
@@ -56,6 +60,7 @@ export async function submitLead(payload: LeadPayload): Promise<LeadResult> {
           ok: false,
           code: "validation",
           message: data.message ?? "Please check the highlighted fields.",
+          field: data.field,
         };
       default:
         return {

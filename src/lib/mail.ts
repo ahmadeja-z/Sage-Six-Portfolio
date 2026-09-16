@@ -1,63 +1,89 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 export const CONTACT_TO_EMAIL = process.env.CONTACT_TO_EMAIL ?? "hello@sagesix.co.uk";
 
 export type MailResult =
-  | { ok: true; messageId?: string }
-  | { ok: false; code: "not_configured" | "provider_error"; error?: string };
+  | { ok: true; id: string }
+  | { ok: false; code: "not_configured" | "provider_error" | "rate_limited"; error?: string };
+
+const REQUIRED_ENV_VARS = ["RESEND_API_KEY", "CONTACT_FROM_EMAIL", "CONTACT_TO_EMAIL"] as const;
+
+function missingEnvVars(): string[] {
+  return REQUIRED_ENV_VARS.filter((name) => !process.env[name]);
+}
+
+let client: Resend | undefined;
+function getClient(): Resend {
+  client ??= new Resend(process.env.RESEND_API_KEY);
+  return client;
+}
 
 /**
- * Sends the enquiry notification to the Sage Six team.
+ * Sends the enquiry notification to the Sage Six team via Resend.
  *
- * SMTP is configured through server-side environment variables only.
- * The recipient is always CONTACT_TO_EMAIL — never taken from the visitor.
- * Reply-To is set to the validated visitor email so a reply opens a
- * conversation with the submitter.
+ * All configuration comes from server-side environment variables only —
+ * RESEND_API_KEY is never read on the client, logged, or returned in a
+ * response. The recipient is always CONTACT_TO_EMAIL, never the visitor's
+ * address. Reply-To is set to the validated visitor email so a normal
+ * "Reply" in the team's email client opens a conversation with them.
  */
 export async function sendEnquiryMail({
   replyTo,
   subject,
   html,
   text,
+  idempotencyKey,
+  tags,
 }: {
   replyTo: string;
   subject: string;
   html: string;
   text: string;
+  idempotencyKey: string;
+  tags?: { name: string; value: string }[];
 }): Promise<MailResult> {
-  const host = process.env.SMTP_HOST;
-  if (!host) {
+  const missing = missingEnvVars();
+  if (missing.length > 0) {
+    // Log only which variables are missing — never their values.
+    console.error(`[contact] Missing required environment variable(s): ${missing.join(", ")}`);
     return { ok: false, code: "not_configured" };
   }
 
   try {
-    const transport = nodemailer.createTransport({
-      host,
-      port: Number(process.env.SMTP_PORT ?? 587),
-      secure: process.env.SMTP_SECURE === "true",
-      auth: process.env.SMTP_USER
-        ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS ?? "" }
-        : undefined,
-    });
-
-    const info = await transport.sendMail({
-      from: {
-        name: "Sage Six Website",
-        address: process.env.SMTP_FROM ?? CONTACT_TO_EMAIL,
+    const { data, error } = await getClient().emails.send(
+      {
+        from: process.env.CONTACT_FROM_EMAIL!,
+        to: [process.env.CONTACT_TO_EMAIL!],
+        replyTo,
+        subject,
+        html,
+        text,
+        tags,
       },
-      to: CONTACT_TO_EMAIL,
-      replyTo,
-      subject,
-      html,
-      text,
-    });
+      { idempotencyKey },
+    );
 
-    return { ok: true, messageId: info.messageId };
+    if (error) {
+      // Safe summary only: Resend's error `name` is a fixed enum and
+      // `message` is a provider-authored description — never the visitor's
+      // message content or any secret.
+      console.error(`[contact] Resend rejected the email: ${error.name} — ${error.message}`);
+      return {
+        ok: false,
+        code: error.name === "rate_limit_exceeded" ? "rate_limited" : "provider_error",
+      };
+    }
+
+    if (!data?.id) {
+      console.error("[contact] Resend returned no message id despite no error.");
+      return { ok: false, code: "provider_error" };
+    }
+
+    return { ok: true, id: data.id };
   } catch (err) {
-    return {
-      ok: false,
-      code: "provider_error",
-      error: err instanceof Error ? err.message : "Unknown mail error",
-    };
+    console.error(
+      `[contact] Unexpected error while sending enquiry email: ${err instanceof Error ? err.message : "unknown error"}`,
+    );
+    return { ok: false, code: "provider_error" };
   }
 }

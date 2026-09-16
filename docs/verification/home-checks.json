@@ -1,0 +1,97 @@
+{
+  "rows": [
+    {
+      "width": 320,
+      "overflow": false,
+      "hexagons": 6,
+      "projects": 3,
+      "brokenImages": [],
+      "headline": 280
+    },
+    {
+      "width": 375,
+      "overflow": false,
+      "hexagons": 6,
+      "projects": 3,
+      "brokenImages": [],
+      "headline": 335
+    },
+    {
+      "width": 430,
+      "overflow": false,
+      "hexagons": 6,
+      "projects": 3,
+      "brokenImages": [],
+      "headline": 390
+    },
+    {
+      "width": 768,
+      "overflow": false,
+      "hexagons": 6,
+      "projects": 3,
+      "brokenImages": [],
+      "headline": 704
+    },
+    {
+      "width": 1024,
+      "overflow": false,
+      "hexagons": 6,
+      "projects": 3,
+      "brokenImages": [],
+      "headline": 720
+    },
+    {
+      "width": 1280,
+      "overflow": false,
+      "hexagons": 6,
+      "projects": 3,
+      "brokenImages": [],
+      "headline": 554.875
+    },
+    {
+      "width": 1440,
+      "overflow": false,
+      "hexagons": 6,
+      "projects": 3,
+      "brokenImages": [],
+      "headline": 631.671875
+    },
+    {
+      "width": 1600,
+      "overflow": false,
+      "hexagons": 6,
+      "projects": 3,
+      "brokenImages": [],
+      "headline": 696.953125
+    },
+    {
+      "width": 1920,
+      "overflow": false,
+      "hexagons": 6,
+      "projects": 3,
+      "brokenImages": [],
+      "headline": 696.953125
+    }
+  ],
+  "menu": {
+    "open": true,
+    "scrollLocked": true,
+    "focusTrapped": true,
+    "closed": true,
+    "focusRestored": true,
+    "route": "/services"
+  },
+  "anchor": {
+    "hash": "#work",
+    "y": 1513
+  },
+  "newRouteY": 0,
+  "backY": 1524,
+  "reduced": "none",
+  "metadata": {
+    "title": "Sage Six | Mobile App & Website Development",
+    "canonical": "https://sagesix.com/",
+    "icon": "http://localhost:3000/images/sagesix-icon.svg"
+  },
+  "errors": []
+}

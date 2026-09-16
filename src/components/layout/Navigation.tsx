@@ -1,194 +1,146 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
-import { siteConfig } from "@/lib/site";
-import { cn } from "@/lib/utils";
-import { Magnetic } from "@/components/ui/Magnetic";
-import { Logo } from "@/components/ui/Logo";
+import { usePathname } from "next/navigation";
+import { animate, LayoutGroup, motion, stagger, useAnimate } from "motion/react";
+import { ArrowUpRight } from "lucide-react";
+import { homeNavigation } from "@/data/home";
+import { useHomeReducedMotion } from "@/components/home/motion";
+import styles from "./Navigation.module.css";
+
+const timing = { hover: 0.18, entrance: 0.32, indicator: 0.34, panel: 0.36, exit: 0.18, stagger: 0.045 };
+const ease = [0.22, 1, 0.36, 1] as const;
+const MotionLink = motion.create(Link);
+const isActive = (pathname: string, href: string) => pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
+
+function MenuIcon({ open, reduce }: { open: boolean; reduce: boolean }) {
+  return <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+    <motion.path fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"
+      initial={false} animate={{ d: open ? "M6 6L18 18" : "M4 8L20 8" }} transition={{ duration: reduce ? 0 : timing.hover, ease }} />
+    <motion.path fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"
+      initial={false} animate={{ d: open ? "M6 18L18 6" : "M4 16L20 16" }} transition={{ duration: reduce ? 0 : timing.hover, ease }} />
+  </svg>;
+}
 
 export function Navigation() {
   const pathname = usePathname();
+  const reduce = useHomeReducedMotion();
   const [scrolled, setScrolled] = useState(false);
-  const [hidden, setHidden] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const closingRef = useRef(false);
+  const [scope, animateEntrance] = useAnimate();
 
+  // The shared layout stays mounted across navigation. Keep SSR content visible.
   useEffect(() => {
-    let lastY = 0;
-    const onScroll = () => {
-      const y = window.scrollY;
-      setScrolled(y > 24);
-      setHidden(y > 160 && y - lastY > 12);
-      if (y <= 160) setHidden(false);
-      lastY = y;
-
-      const doc = document.documentElement;
-      const total = doc.scrollHeight - window.innerHeight;
-      setProgress(total > 0 ? y / total : 0);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const controls = animateEntrance("[data-nav-entrance]", { opacity: [0.65, 1], y: [-5, 0] },
+      { duration: timing.entrance, delay: stagger(timing.stagger), ease });
+    return () => controls.complete();
+  }, [animateEntrance]);
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 24);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
   }, []);
-
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [menuOpen]);
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const wide = window.matchMedia("(min-width: 1024px)");
+    const resize = () => { if (wide.matches) dialog.current?.close(); };
+    wide.addEventListener("change", resize);
+    return () => { document.body.style.overflow = previous; wide.removeEventListener("change", resize); };
+  }, [open]);
 
-  return (
-    <>
-      <motion.header
-        initial={{ y: -80 }}
-        animate={{ y: hidden && !menuOpen ? -100 : 0 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className={cn(
-          "fixed inset-x-0 top-0 z-[90] transition-colors duration-500",
-          scrolled && !menuOpen
-            ? "border-b border-line-soft bg-ink/80 backdrop-blur-md"
-            : "border-b border-transparent bg-transparent",
-        )}
-      >
-        <div
-          className="absolute inset-x-0 top-0 h-px origin-left bg-sage/70"
-          style={{ transform: `scaleX(${progress})` }}
-          aria-hidden="true"
-        />
-        <nav
-          className="container-x flex h-[76px] items-center justify-between"
-          aria-label="Main navigation"
-        >
-          <Logo variant="color" size="header" />
-
-          <ul className="hidden items-center gap-9 lg:flex">
-            {siteConfig.nav.map((item) => {
-              const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "relative font-mono text-[11px] uppercase tracking-[0.22em] transition-colors duration-300",
-                      active ? "text-sage" : "text-fog hover:text-bone",
-                    )}
-                  >
-                    {item.label}
-                    <span
-                      className={cn(
-                        "absolute -bottom-1.5 left-0 h-px w-full origin-left bg-sage transition-transform duration-300",
-                        active ? "scale-x-100" : "scale-x-0",
-                      )}
-                    />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="hidden items-center gap-6 lg:flex">
-            <Magnetic strength={0.25}>
-              <Link
-                href="/contact"
-                className="group inline-flex items-center gap-2 border border-line px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-bone transition-colors duration-300 hover:border-sage hover:text-sage"
-                data-cursor="hover"
-              >
-                Start a Project
-                <span className="inline-block transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
-                  →
-                </span>
-              </Link>
-            </Magnetic>
+  const close = async (selection = false) => {
+    if (closingRef.current || !dialog.current?.open) return;
+    closingRef.current = true;
+    setClosing(true);
+    if (!reduce) await animate(dialog.current, { opacity: 0, x: 24 }, { duration: timing.exit, ease });
+    dialog.current?.close();
+    closingRef.current = false;
+    setClosing(false);
+    setOpen(false);
+    if (selection) document.getElementById("main")?.focus({ preventScroll: true });
+    else trigger.current?.focus({ preventScroll: true });
+  };
+  const indicator = (href: string) => isActive(pathname, href) ?
+    <motion.span key="nav-indicator" aria-hidden="true" className={styles.indicator} layoutId="active-page" initial={false}
+      transition={{ duration: reduce ? 0 : timing.indicator, ease }} /> : null;
+  const interaction = {
+    whileHover: { y: reduce ? 0 : -2 }, whileFocus: { y: reduce ? 0 : -2 },
+    whileTap: { y: 0 }, transition: { duration: reduce ? 0 : timing.hover, ease },
+  };
+  const current = (href: string) => isActive(pathname, href) ? "page" as const : undefined;
+  return <>
+    <header ref={scope} className={`s6 s6-header ${styles.header} ${scrolled ? styles.scrolled : ""}`}>
+      <a href="#main" className="s6-skip">Skip to content</a>
+      <LayoutGroup id="site-navigation">
+        <nav className="s6-container s6-nav" aria-label="Main navigation">
+          <MotionLink {...interaction} data-nav-entrance href="/" aria-label="Sage Six home" aria-current={current("/")} className={`s6-logo ${styles.logo}`}>
+            <Image src="/images/sagesix-logo.svg" alt="Sage Six" width={171} height={70} preload />
+            {indicator("/")}
+          </MotionLink>
+          <div className="s6-desktop-links">
+            {homeNavigation.map(item => <MotionLink {...interaction} data-nav-entrance key={item.href} href={item.href} aria-current={current(item.href)} className={styles.link}>
+              {item.label}{indicator(item.href)}
+            </MotionLink>)}
           </div>
-
-          <button
-            type="button"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-expanded={menuOpen}
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-            className="flex h-11 w-11 flex-col items-center justify-center gap-[7px] lg:hidden"
-          >
-            <motion.span
-              animate={menuOpen ? { rotate: 45, y: 4.5 } : { rotate: 0, y: 0 }}
-              className="block h-px w-6 bg-bone"
-            />
-            <motion.span
-              animate={menuOpen ? { rotate: -45, y: -4.5 } : { rotate: 0, y: 0 }}
-              className="block h-px w-6 bg-bone"
-            />
-          </button>
+          <MotionLink {...interaction} data-nav-entrance href="/contact" className={`s6-button s6-nav-cta ${styles.cta}`}>
+            Discuss your project <ArrowUpRight size={17} aria-hidden="true" />
+          </MotionLink>
+          <button ref={trigger} className="s6-menu-toggle" type="button" aria-label="Open menu" aria-controls="site-menu" aria-expanded={open} aria-haspopup="dialog"
+            onClick={() => {
+              if (!dialog.current || closingRef.current) return;
+              dialog.current.style.opacity = "1";
+              dialog.current.style.transform = "none";
+              dialog.current.showModal();
+              setOpen(true);
+              if (!reduce) void animate(dialog.current, { opacity: [0.7, 1], x: [40, 0] }, { duration: timing.panel, ease });
+            }}><MenuIcon open={open} reduce={reduce} /></button>
         </nav>
-      </motion.header>
-
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[85] flex flex-col bg-ink lg:hidden"
-          >
-            <div className="flex flex-1 flex-col justify-center px-6">
-              <nav aria-label="Mobile navigation">
-                <ul className="space-y-2">
-                  {siteConfig.nav.map((item, i) => (
-                    <motion.li
-                      key={item.href}
-                      initial={{ opacity: 0, y: 24 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.08 + i * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    >
-                      <Link
-                        href={item.href}
-                        onClick={() => setMenuOpen(false)}
-                        className={cn(
-                          "group flex items-baseline gap-4 py-2",
-                          pathname.startsWith(item.href) ? "text-sage" : "text-bone",
-                        )}
-                      >
-                        <span className="font-mono text-[11px] tracking-[0.2em] text-mist">
-                          0{i + 1}
-                        </span>
-                        <span className="font-display text-5xl font-semibold tracking-tight transition-transform duration-300 group-hover:translate-x-2">
-                          {item.label}
-                        </span>
-                      </Link>
-                    </motion.li>
-                  ))}
-                </ul>
-              </nav>
-
-              <motion.div
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.45, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="mt-12"
-              >
-                <Link
-                  href="/contact"
-                  onClick={() => setMenuOpen(false)}
-                  className="inline-flex items-center gap-3 border border-sage px-6 py-4 font-mono text-xs uppercase tracking-[0.18em] text-sage"
-                >
-                  Start a Project →
-                </Link>
-              </motion.div>
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.55 }}
-              className="px-6 pb-8 font-mono text-[11px] uppercase tracking-[0.2em] text-mist"
-            >
-              {siteConfig.email}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  );
+      </LayoutGroup>
+    </header>
+    <dialog ref={dialog} id="site-menu" className={`s6 s6-menu ${styles.menu}`} aria-label="Main menu" data-lenis-prevent
+      onWheel={e => e.stopPropagation()} onTouchMove={e => e.stopPropagation()}
+      onKeyDown={e => {
+        if (e.key !== "Tab") return;
+        const items = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'));
+        const first = items[0], last = items[items.length - 1];
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === e.currentTarget)) {
+          e.preventDefault(); last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault(); first?.focus();
+        }
+      }}
+      onCancel={e => { e.preventDefault(); void close(); }} onClose={() => setOpen(false)}>
+      {open && <div>
+        <div className="s6-menu-top">
+          <Link href="/" aria-label="Sage Six home" aria-current={current("/")} onNavigate={() => void close(true)}>
+            <Image src="/images/sagesix-logo.svg" alt="Sage Six" width={171} height={70} />
+          </Link>
+          <button type="button" autoFocus className="s6-menu-close" aria-label="Close menu" onClick={() => void close()}><MenuIcon open={!closing} reduce={reduce} /></button>
+        </div>
+        <nav aria-label="Mobile navigation">
+          {[{ label: "Home", href: "/" }, ...homeNavigation].map((item, i) => <motion.div key={item.href}
+            initial={{ opacity: reduce ? 1 : 0, x: reduce ? 0 : 14 }} animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: reduce ? 0 : timing.panel, delay: reduce ? 0 : i * timing.stagger, ease }}>
+            <Link href={item.href} aria-current={current(item.href)} onNavigate={() => void close(true)}>
+              <span>0{i + 1}</span>{item.label}<ArrowUpRight aria-hidden="true" />
+            </Link>
+          </motion.div>)}
+        </nav>
+        <MotionLink {...interaction} className={`s6-button ${styles.cta}`} href="/contact" onNavigate={() => void close(true)}>
+          Discuss your project <ArrowUpRight size={18} aria-hidden="true" />
+        </MotionLink>
+        <a className="s6-menu-email" href="mailto:hello@sagesix.co.uk">hello@sagesix.co.uk</a>
+      </div>}
+    </dialog>
+  </>;
 }
