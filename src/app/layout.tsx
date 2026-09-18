@@ -5,6 +5,7 @@ import "./globals.css";
 import "./home.css";
 import { siteConfig } from "@/lib/site";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
+import { PixelCursorTrail } from "@/components/ui/pixel-cursor-trail";
 
 import {
   SiteHeader,
@@ -129,6 +130,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
         <LegacyEffects />
         <SmoothScroll />
+        <PixelCursorTrail />
         <SiteHeader />
         <main id="main" tabIndex={-1}>
           {children}
