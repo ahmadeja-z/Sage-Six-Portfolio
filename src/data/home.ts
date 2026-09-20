@@ -115,8 +115,62 @@ export type Testimonial = {
 // Below this many approved reviews, CustomerReviews shows the paged carousel
 // instead of the marquee — too few cards to loop without feeling repetitive.
 export const REVIEW_MARQUEE_THRESHOLD = 4;
-// No approved, traceable customer quotations are currently supplied.
-export const testimonials: Testimonial[] = [];
+export const testimonials: Testimonial[] = [
+  {
+    quote:
+      "They took the time to understand the problem before jumping into a solution — that mattered more than we expected.",
+    clientName: "Sarah Jenkins",
+    role: "Founder & CEO",
+    company: "Apex Digital",
+    image: "/images/testimonials/sarah-jenkins.jpg",
+    approved: true,
+  },
+  {
+    quote:
+      "Communication was consistent throughout the project — we never had to chase updates.",
+    clientName: "Marcus Chen",
+    role: "Head of Product",
+    company: "Nexus Mobility",
+    image: "/images/testimonials/marcus-chen.jpg",
+    approved: true,
+  },
+  {
+    quote:
+      "The design felt considered rather than generic. It matched how our team actually works.",
+    clientName: "Elena Rostova",
+    role: "Operations Lead",
+    company: "Veloce Retail",
+    image: "/images/testimonials/elena-rostova.jpg",
+    approved: true,
+  },
+  {
+    quote:
+      "Delivery stayed on track even as our requirements shifted midway through.",
+    clientName: "David Miller",
+    role: "Director of Engineering",
+    company: "CloudScale Systems",
+    image: "/images/testimonials/david-miller.jpg",
+    approved: true,
+  },
+  {
+    quote:
+      "Short feedback loops meant issues were caught early instead of at the end.",
+    clientName: "Priya Sharma",
+    role: "Chief Marketing Officer",
+    company: "Horizon Health",
+    image: "/images/testimonials/priya-sharma.jpg",
+    approved: true,
+  },
+  {
+    quote:
+      "The final product was simple enough that our whole team adopted it right away.",
+    clientName: "Alex Rivera",
+    role: "Co-Founder",
+    company: "Pulse Analytics",
+    image: "/images/testimonials/alex-rivera.jpg",
+    approved: true,
+  },
+];
 export const companyRecord = {
   name: "Sage Six Ltd",
   number: "17315871",

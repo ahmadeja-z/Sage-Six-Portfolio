@@ -482,11 +482,11 @@ export function AIProjectAssistant() {
           bottom: `calc(20px + env(safe-area-inset-bottom, 0px) + ${dockOffset}px)`,
           transition: dockTransition,
         }}
-        className="fixed right-5 z-[95] flex h-14 items-center gap-2.5 rounded-full bg-sage px-5 font-mono text-[11px] uppercase tracking-[0.16em] text-ink shadow-[0_8px_30px_rgba(163,184,138,0.25)] transition-colors duration-300 hover:bg-sage-bright"
+        className="fixed right-5 z-[95] flex h-13 items-center gap-2.5 rounded-full bg-gradient-to-r from-[#17184a] via-[#273990] to-[#0f75bd] px-5 font-mono text-[11px] uppercase tracking-[0.16em] text-white shadow-[0_8px_30px_rgba(39,57,144,0.35)] border border-white/20 transition-all duration-300 hover:scale-105 hover:shadow-[0_12px_40px_rgba(39,57,144,0.45)] active:scale-95"
         data-cursor="hover"
       >
-        {open ? <X className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-        <span className="hidden sm:inline">{open ? "Close" : "Ask Sage Six"}</span>
+        {open ? <X className="h-4 w-4" /> : <Sparkles className="h-4 w-4 text-cyan-300" />}
+        <span className="hidden font-medium sm:inline">{open ? "Close" : "Ask Sage Six"}</span>
       </motion.button>
 
       <AnimatePresence>
@@ -499,19 +499,28 @@ export function AIProjectAssistant() {
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.97 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             style={{
-              bottom: `calc(96px + env(safe-area-inset-bottom, 0px) + ${dockOffset}px)`,
+              bottom: `calc(90px + env(safe-area-inset-bottom, 0px) + ${dockOffset}px)`,
               transition: dockTransition,
             }}
-            className="fixed right-5 z-[94] flex h-[min(600px,calc(100svh-7rem))] w-[min(420px,calc(100vw-2.5rem))] flex-col overflow-hidden border border-line bg-ink-2/95 backdrop-blur-xl"
+            className="fixed right-5 z-[94] flex h-[min(620px,calc(100svh-7rem))] w-[min(430px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_25px_70px_-15px_rgba(15,23,42,0.3)] backdrop-blur-xl"
           >
-            <div className="flex items-center justify-between border-b border-line px-5 py-4">
+            <div className="flex items-center justify-between bg-gradient-to-r from-[#0f172a] via-[#17184a] to-[#273990] px-5 py-4 text-white shadow-sm">
               <div className="flex items-center gap-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-sage/15 text-sage">
+                <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-cyan-300 backdrop-blur-md border border-white/15">
                   <Sparkles className="h-4 w-4" />
-                </span>
+                  <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500 border-2 border-[#0f172a]" />
+                  </span>
+                </div>
                 <div>
-                  <p className="font-display text-sm font-semibold tracking-tight text-bone">Ask Sage Six</p>
-                  <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-mist">Website assistant</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-display text-sm font-semibold tracking-tight text-white">Ask Sage Six</p>
+                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-medium tracking-wider text-emerald-300 border border-emerald-500/30 uppercase">
+                      AI Online
+                    </span>
+                  </div>
+                  <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-cyan-200/70">Sage Six Digital Assistant</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -520,7 +529,7 @@ export function AIProjectAssistant() {
                   onClick={newConversation}
                   aria-label="New conversation"
                   title="New conversation"
-                  className="flex h-8 w-8 items-center justify-center text-mist transition-colors hover:text-bone"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
                 >
                   <Eraser className="h-4 w-4" strokeWidth={1.75} />
                 </button>
@@ -528,7 +537,7 @@ export function AIProjectAssistant() {
                   type="button"
                   onClick={() => setOpen(false)}
                   aria-label="Close assistant"
-                  className="flex h-8 w-8 items-center justify-center text-mist transition-colors hover:text-bone"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -537,7 +546,7 @@ export function AIProjectAssistant() {
 
             <div
               ref={listRef}
-              className="flex-1 space-y-4 overflow-y-auto px-5 py-5"
+              className="flex-1 space-y-4 overflow-y-auto bg-slate-50/50 px-5 py-5"
               data-lenis-prevent
               aria-live="polite"
             >
@@ -548,17 +557,19 @@ export function AIProjectAssistant() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                   className={cn(
-                    "max-w-[88%] rounded-lg px-4 py-3 text-[13px] leading-relaxed",
-                    msg.role === "user" ? "ml-auto bg-sage text-ink" : "border border-line-soft bg-ink-3 text-fog",
-                    msg.error && "border-red-400/40",
+                    "max-w-[85%] px-4 py-3 text-[13px] leading-relaxed font-normal shadow-sm transition-all",
+                    msg.role === "user"
+                      ? "s6-user-bubble ml-auto bg-gradient-to-r from-[#17184a] via-[#273990] to-[#0f75bd] text-white rounded-[18px] rounded-tr-[4px]"
+                      : "s6-bot-bubble border border-slate-200/80 bg-white text-slate-800 rounded-[18px] rounded-tl-[4px]",
+                    msg.error && "border-red-400/50 bg-red-50/80 text-red-900",
                   )}
                 >
-                  <p>{msg.content}</p>
+                  <p className={msg.role === "user" ? "text-white" : "text-slate-800"}>{msg.content}</p>
                   {msg.links && msg.links.length > 0 && (
                     <ul className="mt-3 space-y-1.5">
                       {msg.links.map((link) => (
                         <li key={link.href + link.label}>
-                          <Link href={link.href} className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-sage hover:text-sage-bright">
+                          <Link href={link.href} className="inline-flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#0f75bd] hover:text-[#273990]">
                             {link.label}
                             <ChevronDown className="h-3 w-3 -rotate-90" strokeWidth={1.75} />
                           </Link>
@@ -574,7 +585,7 @@ export function AIProjectAssistant() {
                           key={s.value}
                           type="button"
                           onClick={() => send(s.value)}
-                          className="border border-line-soft px-2.5 py-1.5 text-[11px] text-fog transition-colors hover:border-sage hover:text-sage"
+                          className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 shadow-xs transition-all hover:-translate-y-0.5 hover:border-[#0f75bd] hover:bg-[#273990] hover:text-white hover:shadow-md active:translate-y-0"
                         >
                           {s.label}
                         </button>
@@ -585,12 +596,12 @@ export function AIProjectAssistant() {
               ))}
 
               {typing && (
-                <div className="flex items-center gap-1.5 rounded-lg border border-line-soft bg-ink-3 px-4 py-3.5 w-fit" aria-label="Assistant is thinking">
+                <div className="flex items-center gap-1.5 rounded-[18px] rounded-tl-[4px] border border-slate-200/80 bg-white px-4 py-3.5 w-fit shadow-xs" aria-label="Assistant is thinking">
                   {[0, 1, 2].map((i) => (
                     <motion.span
                       key={i}
-                      className="h-1.5 w-1.5 rounded-full bg-sage"
-                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      className="h-2 w-2 rounded-full bg-[#0f75bd]"
+                      animate={{ opacity: [0.3, 1, 0.3], scale: [0.85, 1.15, 0.85] }}
                       transition={{ duration: 1, repeat: Infinity, delay: i * 0.18 }}
                     />
                   ))}
@@ -603,9 +614,9 @@ export function AIProjectAssistant() {
                 e.preventDefault();
                 send(input);
               }}
-              className="border-t border-line p-3.5"
+              className="border-t border-slate-200/80 bg-white p-3.5"
             >
-              <div className="flex items-end gap-2 rounded-full border border-line bg-ink-3 px-3 py-2">
+              <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 px-3.5 py-1.5 shadow-xs transition-all focus-within:border-[#0f75bd] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0f75bd]/20">
                 <textarea
                   ref={inputRef}
                   rows={1}
@@ -617,20 +628,20 @@ export function AIProjectAssistant() {
                       send(input);
                     }
                   }}
-                  placeholder="Ask a question…"
+                  placeholder="Ask a question..."
                   aria-label="Ask the assistant a question"
-                  className="max-h-24 min-w-0 flex-1 resize-none bg-transparent py-2 text-sm text-bone placeholder:text-mist focus:outline-none"
+                  className="max-h-24 min-w-0 flex-1 resize-none bg-transparent py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
                 />
                 <button
                   type="submit"
                   aria-label="Send message"
                   disabled={!input.trim() || typing}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sage text-ink transition-opacity disabled:opacity-30"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-[#273990] to-[#0f75bd] text-white shadow-md transition-all hover:scale-105 hover:shadow-lg disabled:opacity-30 disabled:hover:scale-100"
                 >
-                  <Send className="h-3.5 w-3.5" />
+                  <Send className="h-4 w-4" />
                 </button>
               </div>
-              <p className="mt-2 px-2 text-center font-mono text-[9px] uppercase tracking-[0.16em] text-mist">
+              <p className="mt-2 px-2 text-center font-mono text-[9px] uppercase tracking-[0.16em] text-slate-400">
                 Enter to send · Shift+Enter for a new line
               </p>
             </form>

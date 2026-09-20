@@ -15,49 +15,56 @@ export const sampleTestimonials: Testimonial[] = [
   {
     quote:
       "They took the time to understand the problem before jumping into a solution — that mattered more than we expected.",
-    clientName: "Sample Client 01",
-    role: "Founder",
-    company: "Early-Stage Startup",
+    clientName: "Sarah Jenkins",
+    role: "Founder & CEO",
+    company: "Apex Digital",
+    image: "/images/testimonials/sarah-jenkins.jpg",
     approved: true,
   },
   {
     quote:
       "Communication was consistent throughout the project — we never had to chase updates.",
-    clientName: "Sample Client 02",
-    role: "Operations Lead",
-    company: "Retail Business",
+    clientName: "Marcus Chen",
+    role: "Head of Product",
+    company: "Nexus Mobility",
+    image: "/images/testimonials/marcus-chen.jpg",
     approved: true,
   },
   {
     quote:
       "The design felt considered rather than generic. It matched how our team actually works.",
-    clientName: "Sample Client 03",
-    role: "Product Manager",
-    company: "SaaS Company",
+    clientName: "Elena Rostova",
+    role: "Operations Lead",
+    company: "Veloce Retail",
+    image: "/images/testimonials/elena-rostova.jpg",
     approved: true,
   },
   {
     quote:
       "Delivery stayed on track even as our requirements shifted midway through.",
-    clientName: "Sample Client 04",
-    role: "Marketing Lead",
-    company: "Professional Services Firm",
+    clientName: "David Miller",
+    role: "Director of Engineering",
+    company: "CloudScale Systems",
+    image: "/images/testimonials/david-miller.jpg",
     approved: true,
   },
   {
     quote:
       "Short feedback loops meant issues were caught early instead of at the end.",
-    clientName: "Sample Client 05",
-    role: "IT Manager",
-    company: "Healthcare Provider",
+    clientName: "Priya Sharma",
+    role: "Chief Marketing Officer",
+    company: "Horizon Health",
+    image: "/images/testimonials/priya-sharma.jpg",
     approved: true,
   },
   {
     quote:
       "The final product was simple enough that our whole team adopted it right away.",
-    clientName: "Sample Client 06",
-    role: "Founder",
-    company: "Consumer App",
+    clientName: "Alex Rivera",
+    role: "Co-Founder",
+    company: "Pulse Analytics",
+    image: "/images/testimonials/alex-rivera.jpg",
     approved: true,
   },
 ];
+

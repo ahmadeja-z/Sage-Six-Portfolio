@@ -1203,35 +1203,45 @@ html:has(.s6-header) {
   }
 }
 /* Keep the existing assistant functional, with homepage-specific brand tokens. */
+/* Keep the existing assistant functional, with modern brand aesthetics. */
 body:has(.s6-home) > button[aria-label$="AI assistant"] {
-  background: #17184a;
+  background: linear-gradient(135deg, #17184a 0%, #273990 100%);
   color: white;
-  box-shadow: 0 6px 24px #17184a1a;
+  box-shadow: 0 8px 30px rgba(23, 24, 74, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 body:has(.s6-home) [aria-label="Ask Sage Six assistant"] {
-  --color-ink: #17184a;
-  --color-ink-2: #fff;
-  --color-ink-3: #f0f5fb;
-  --color-bone: #17184a;
-  --color-fog: #454b70;
-  --color-mist: #626a83;
-  --color-line: #dce4ef;
-  --color-line-soft: #dce4ef;
-  --color-sage: #273990;
-  --color-sage-bright: #0f75bd;
-  color: #17184a;
-  border-radius: 12px;
-  box-shadow: 0 16px 60px #17184a24;
+  border-radius: 20px;
+  box-shadow: 0 25px 70px -15px rgba(15, 23, 42, 0.35);
+}
+body:has(.s6-home) [aria-label="Ask Sage Six assistant"] .s6-user-bubble {
+  background: linear-gradient(135deg, #17184a 0%, #273990 60%, #0f75bd 100%) !important;
+  color: #ffffff !important;
+  border-radius: 18px 18px 4px 18px !important;
+  box-shadow: 0 4px 14px rgba(39, 57, 144, 0.25) !important;
+}
+body:has(.s6-home) [aria-label="Ask Sage Six assistant"] .s6-user-bubble * {
+  color: #ffffff !important;
+}
+body:has(.s6-home) [aria-label="Ask Sage Six assistant"] .s6-bot-bubble {
+  background: #f8fafc !important;
+  color: #1e293b !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 18px 18px 18px 4px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+}
+body:has(.s6-home) [aria-label="Ask Sage Six assistant"] .s6-bot-bubble p {
+  color: #1e293b !important;
 }
 body:has(.s6-home) [aria-label="Ask Sage Six assistant"] button {
-  min-height: 44px;
-  min-width: 44px;
+  min-height: 36px;
+  min-width: 36px;
 }
 body:has(.s6-home) [aria-label="Ask Sage Six assistant"] button.bg-sage {
   color: white;
 }
 body:has(.s6-home) [aria-label="Ask Sage Six assistant"] :focus-visible {
-  outline: 3px solid #0f75bd;
+  outline: 2px solid #0f75bd;
   outline-offset: 2px;
 }
 @media (prefers-reduced-motion: reduce) {
