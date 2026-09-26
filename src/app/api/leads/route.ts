@@ -3,8 +3,13 @@ import { NextResponse } from "next/server";
 import type { EnquiryType, LeadPayload } from "@/types";
 import { enquiryTypes } from "@/lib/site";
 import { services } from "@/data/content";
-import { sendEnquiryMail } from "@/lib/mail";
-import { buildEnquiryEmail, buildEnquirySubject } from "@/lib/email";
+import { sendEnquiryMail, sendClientConfirmationMail } from "@/lib/mail";
+import {
+  buildEnquiryEmail,
+  buildEnquirySubject,
+  buildClientConfirmationEmail,
+  buildClientConfirmationSubject,
+} from "@/lib/email";
 
 // This route serves both the full Contact form (src/components/forms/ContactForm.tsx)
 // and the Ask Sage Six assistant's quick-lead panel (src/components/assistant/AIProjectAssistant.tsx).
@@ -162,6 +167,18 @@ export async function POST(request: Request) {
       "We couldn't submit your enquiry. Your details are still here — please try again or email hello@sagesix.co.uk.",
     );
   }
+
+  // Send auto-responder confirmation email to the client
+  const clientSubject = buildClientConfirmationSubject(reference);
+  const clientMail = buildClientConfirmationEmail(lead, submittedAt, reference);
+  await sendClientConfirmationMail({
+    to: lead.email,
+    subject: clientSubject,
+    html: clientMail.html,
+    text: clientMail.text,
+  }).catch((err) => {
+    console.error("[contact] Failed to send client confirmation email:", err);
+  });
 
   return NextResponse.json({ success: true, id: mail.id, reference }, { status: 200 });
 }

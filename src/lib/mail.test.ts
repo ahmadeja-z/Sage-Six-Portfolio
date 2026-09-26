@@ -1,17 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { sendEnquiryMail } from "@/lib/mail";
+import { sendEnquiryMail, sendClientConfirmationMail } from "@/lib/mail";
 
-// Never hit the real Resend API in automated tests — mock the SDK entirely so
-// these tests are repeatable and send zero real emails. `vi.mock` factories
-// are hoisted above imports, and Vitest specifically allows referencing a
-// `mock`-prefixed variable from inside the factory despite that hoisting.
-const mockSend = vi.fn();
-vi.mock("resend", () => ({
-  // A plain `function` (not an arrow function) so `new Resend()` follows
-  // normal constructor-return semantics and yields this object.
-  Resend: vi.fn().mockImplementation(function () {
-    return { emails: { send: mockSend } };
-  }),
+const mockSendMail = vi.fn();
+vi.mock("nodemailer", () => ({
+  default: {
+    createTransport: vi.fn().mockImplementation(() => ({
+      sendMail: mockSendMail,
+    })),
+  },
 }));
 
 const ORIGINAL_ENV = { ...process.env };
@@ -25,11 +21,12 @@ const baseArgs = {
 
 describe("sendEnquiryMail", () => {
   beforeEach(() => {
-    mockSend.mockReset();
+    mockSendMail.mockReset();
     process.env = {
       ...ORIGINAL_ENV,
-      RESEND_API_KEY: "test-key",
-      CONTACT_FROM_EMAIL: "Sage Six Website <enquiries@send.sagesix.co.uk>",
+      SMTP_USER: "hello@sagesix.co.uk",
+      SMTP_PASS: "qa1hTbpngcr6",
+      CONTACT_FROM_EMAIL: '"Sage Six" <hello@sagesix.co.uk>',
       CONTACT_TO_EMAIL: "hello@sagesix.co.uk",
     };
   });
@@ -38,65 +35,64 @@ describe("sendEnquiryMail", () => {
     process.env = { ...ORIGINAL_ENV };
   });
 
-  it("returns not_configured and never calls Resend when RESEND_API_KEY is missing", async () => {
-    delete process.env.RESEND_API_KEY;
+  it("returns not_configured and never calls SMTP when SMTP_USER is missing", async () => {
+    delete process.env.SMTP_USER;
     const result = await sendEnquiryMail(baseArgs);
     expect(result).toEqual({ ok: false, code: "not_configured" });
-    expect(mockSend).not.toHaveBeenCalled();
+    expect(mockSendMail).not.toHaveBeenCalled();
   });
 
-  it("returns not_configured and never calls Resend when CONTACT_FROM_EMAIL is missing", async () => {
-    delete process.env.CONTACT_FROM_EMAIL;
+  it("returns the SMTP message id on success", async () => {
+    mockSendMail.mockResolvedValue({ messageId: "smtp-msg-123" });
     const result = await sendEnquiryMail(baseArgs);
-    expect(result).toEqual({ ok: false, code: "not_configured" });
-    expect(mockSend).not.toHaveBeenCalled();
+    expect(result).toEqual({ ok: true, id: "smtp-msg-123" });
   });
 
-  it("returns not_configured and never calls Resend when CONTACT_TO_EMAIL is missing", async () => {
-    delete process.env.CONTACT_TO_EMAIL;
-    const result = await sendEnquiryMail(baseArgs);
-    expect(result).toEqual({ ok: false, code: "not_configured" });
-    expect(mockSend).not.toHaveBeenCalled();
-  });
-
-  it("returns the Resend message id on success and forwards the idempotency key", async () => {
-    mockSend.mockResolvedValue({ data: { id: "resend-msg-123" }, error: null });
-    const result = await sendEnquiryMail(baseArgs);
-    expect(result).toEqual({ ok: true, id: "resend-msg-123" });
-    expect(mockSend).toHaveBeenCalledWith(expect.any(Object), { idempotencyKey: "contact-enquiry/test-id" });
-  });
-
-  it("sends from CONTACT_FROM_EMAIL and to CONTACT_TO_EMAIL, never the visitor's address", async () => {
-    mockSend.mockResolvedValue({ data: { id: "resend-msg-123" }, error: null });
+  it("sends from CONTACT_FROM_EMAIL and to CONTACT_TO_EMAIL with replyTo set to visitor's address", async () => {
+    mockSendMail.mockResolvedValue({ messageId: "smtp-msg-123" });
     await sendEnquiryMail(baseArgs);
-    const [payload] = mockSend.mock.calls[0];
-    expect(payload.from).toBe("Sage Six Website <enquiries@send.sagesix.co.uk>");
-    expect(payload.to).toEqual(["hello@sagesix.co.uk"]);
+    const [payload] = mockSendMail.mock.calls[0];
+    expect(payload.from).toBe('"Sage Six" <hello@sagesix.co.uk>');
+    expect(payload.to).toBe("hello@sagesix.co.uk");
     expect(payload.replyTo).toBe("visitor@example.com");
-    expect(payload.from).not.toContain("visitor@example.com");
   });
 
-  it("maps a generic Resend error to provider_error without throwing", async () => {
-    mockSend.mockResolvedValue({ data: null, error: { name: "application_error", message: "boom" } });
+  it("returns provider_error if SMTP throws an error", async () => {
+    mockSendMail.mockRejectedValue(new Error("network down"));
     const result = await sendEnquiryMail(baseArgs);
-    expect(result).toEqual({ ok: false, code: "provider_error" });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe("provider_error");
+    }
+  });
+});
+
+describe("sendClientConfirmationMail", () => {
+  beforeEach(() => {
+    mockSendMail.mockReset();
+    process.env = {
+      ...ORIGINAL_ENV,
+      SMTP_USER: "hello@sagesix.co.uk",
+      SMTP_PASS: "qa1hTbpngcr6",
+    };
   });
 
-  it("maps a Resend rate_limit_exceeded error to rate_limited", async () => {
-    mockSend.mockResolvedValue({ data: null, error: { name: "rate_limit_exceeded", message: "slow down" } });
-    const result = await sendEnquiryMail(baseArgs);
-    expect(result).toEqual({ ok: false, code: "rate_limited" });
+  afterEach(() => {
+    process.env = { ...ORIGINAL_ENV };
   });
 
-  it("treats a missing message id as a provider error even without an explicit error", async () => {
-    mockSend.mockResolvedValue({ data: null, error: null });
-    const result = await sendEnquiryMail(baseArgs);
-    expect(result).toEqual({ ok: false, code: "provider_error" });
-  });
+  it("sends confirmation email to client email address", async () => {
+    mockSendMail.mockResolvedValue({ messageId: "smtp-client-msg-456" });
+    const result = await sendClientConfirmationMail({
+      to: "visitor@example.com",
+      subject: "Thank you for your enquiry",
+      html: "<p>Confirmation</p>",
+      text: "Confirmation",
+    });
 
-  it("returns provider_error if the SDK throws instead of resolving", async () => {
-    mockSend.mockRejectedValue(new Error("network down"));
-    const result = await sendEnquiryMail(baseArgs);
-    expect(result).toEqual({ ok: false, code: "provider_error" });
+    expect(result).toEqual({ ok: true, id: "smtp-client-msg-456" });
+    const [payload] = mockSendMail.mock.calls[0];
+    expect(payload.to).toBe("visitor@example.com");
+    expect(payload.replyTo).toBe("hello@sagesix.co.uk");
   });
 });

@@ -41,7 +41,6 @@ export const homeServices: HomeService[] = [
     description: "Practical AI for real business value.",
     image: "hero-ai-automation.png",
     icon: "ai",
-    light: true,
   },
 ];
 export const homeNavigation = [

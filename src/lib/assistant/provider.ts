@@ -3,7 +3,7 @@ import { SYSTEM_INSTRUCTION, INJECTION_GUARD } from "@/lib/assistant/system";
 import { knowledgeBase } from "@/lib/assistant/knowledge";
 import { LIMITS, type AssistantHistoryItem } from "@/lib/assistant/types";
 
-export const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-3.1-flash-lite";
+export const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
 
 export type ProviderResult =
   | { ok: true; text: string }
@@ -44,9 +44,13 @@ export async function generateAssistantReply(
 }
 Always include the "message" field. Never include any markdown outside the JSON.`;
 
-  const modelsToTry = [GEMINI_MODEL, "gemini-3.1-flash-lite", "gemini-3.5-flash-lite"].filter(
-    (m, idx, arr) => arr.indexOf(m) === idx
-  );
+  const modelsToTry = [
+    GEMINI_MODEL,
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-3.1-flash-lite",
+  ].filter((m, idx, arr) => arr.indexOf(m) === idx);
 
   let lastError: unknown;
   for (const model of modelsToTry) {

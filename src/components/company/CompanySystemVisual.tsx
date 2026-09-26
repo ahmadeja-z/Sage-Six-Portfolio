@@ -323,20 +323,28 @@ export function CompanySystemVisual() {
 
       <div className="s6-company-system-caption">
         <p className="s6-company-system-tagline">ONE CONNECTED DELIVERY SYSTEM</p>
-        {activeCapability && (
-          <p className="s6-company-system-desc" aria-hidden="true">
-            <span style={{ color: activeCapability.color }}>{activeCapability.label}</span>
-            {" — "}
-            {activeCapability.description}
-          </p>
-        )}
+        <p
+          className="s6-company-system-desc"
+          aria-hidden="true"
+          style={{
+            opacity: activeCapability ? 1 : 0,
+            transition: "opacity 0.2s ease",
+          }}
+        >
+          {activeCapability ? (
+            <>
+              <span style={{ color: activeCapability.color }}>{activeCapability.label}</span>
+              {" — "}
+              {activeCapability.description}
+            </>
+          ) : (
+            <span style={{ visibility: "hidden" }}>
+              <span>Placeholder</span> — Practical AI tooling and workflow automation built into the product.
+            </span>
+          )}
+        </p>
       </div>
 
-      <p className="s6-company-system-meta">
-        <a href={companyRecord.url} target="_blank" rel="noopener noreferrer">
-          {companyRecord.name} · UK software company · Company No. {companyRecord.number}
-        </a>
-      </p>
     </div>
   );
 }

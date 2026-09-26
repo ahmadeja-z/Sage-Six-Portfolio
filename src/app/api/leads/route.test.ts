@@ -3,10 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Mock the mail layer entirely — these tests exercise routing, validation,
 // spam handling and status-code mapping, never a real Resend send.
 const mockSendEnquiryMail = vi.fn();
+const mockSendClientConfirmationMail = vi.fn();
 vi.mock("@/lib/mail", () => ({
-  // Wrapped in a closure (not referenced directly) so the outer `const`
-  // below doesn't need to exist yet when this hoisted factory runs.
   sendEnquiryMail: (...args: unknown[]) => mockSendEnquiryMail(...args),
+  sendClientConfirmationMail: (...args: unknown[]) => mockSendClientConfirmationMail(...args),
   CONTACT_TO_EMAIL: "hello@sagesix.co.uk",
 }));
 
@@ -37,6 +37,8 @@ describe("POST /api/leads", () => {
   beforeEach(() => {
     mockSendEnquiryMail.mockReset();
     mockSendEnquiryMail.mockResolvedValue({ ok: true, id: "resend-msg-1" });
+    mockSendClientConfirmationMail.mockReset();
+    mockSendClientConfirmationMail.mockResolvedValue({ ok: true, id: "resend-client-msg-1" });
   });
 
   it("accepts a valid enquiry and returns the Resend message id", async () => {

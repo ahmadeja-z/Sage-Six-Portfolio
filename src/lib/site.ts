@@ -10,9 +10,9 @@ export const siteConfig = {
   email: "hello@sagesix.co.uk",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://sagesix.com",
   socials: [
-    { label: "GitHub", href: "#", placeholder: true },
-    { label: "LinkedIn", href: "#", placeholder: true },
-    { label: "X / Twitter", href: "#", placeholder: true },
+    { label: "LinkedIn", href: "https://www.linkedin.com/company/sagesix", icon: "linkedin" },
+    { label: "Facebook", href: "https://www.facebook.com/sagesix", icon: "facebook" },
+    { label: "Instagram", href: "https://www.instagram.com/sagesix", icon: "instagram" },
   ],
   nav: [
     { label: "Work", href: "/work" },

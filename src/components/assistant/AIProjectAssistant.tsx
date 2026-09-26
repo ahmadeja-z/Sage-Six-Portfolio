@@ -60,37 +60,6 @@ const intro: ChatMessage = {
   ],
 };
 
-// Keeps the floating launcher/panel clear of the footer (links, legal text,
-// the Companies House link) by parking them fully above it as soon as any
-// part of the footer enters view, rather than tracking scroll continuously.
-function useFooterDockOffset(): number {
-  const [offset, setOffset] = useState(0);
-  useEffect(() => {
-    const footer = document.getElementById("site-footer");
-    if (!footer) return;
-    const gap = 24;
-    const computeOffset = () => {
-      const height = footer.getBoundingClientRect().height;
-      const maxOffset = Math.max(window.innerHeight - 160, 120);
-      return Math.min(height + gap, maxOffset);
-    };
-    const io = new IntersectionObserver(
-      ([entry]) => setOffset(entry.isIntersecting ? computeOffset() : 0),
-      { threshold: 0 },
-    );
-    io.observe(footer);
-    const ro = new ResizeObserver(() => {
-      setOffset((prev) => (prev > 0 ? computeOffset() : 0));
-    });
-    ro.observe(footer);
-    return () => {
-      io.disconnect();
-      ro.disconnect();
-    };
-  }, []);
-  return offset;
-}
-
 function makeSessionId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
   return `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
@@ -113,8 +82,6 @@ export function AIProjectAssistant() {
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const reduce = useReducedMotion();
-  const dockOffset = useFooterDockOffset();
-  const dockTransition = reduce ? undefined : "bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1)";
 
   useEffect(() => {
     setSessionId(makeSessionId());
@@ -479,8 +446,7 @@ export function AIProjectAssistant() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 1.6, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         style={{
-          bottom: `calc(20px + env(safe-area-inset-bottom, 0px) + ${dockOffset}px)`,
-          transition: dockTransition,
+          bottom: `calc(20px + env(safe-area-inset-bottom, 0px))`,
         }}
         className="fixed right-5 z-[95] flex h-13 items-center gap-2.5 rounded-full bg-gradient-to-r from-[#17184a] via-[#273990] to-[#0f75bd] px-5 font-mono text-[11px] uppercase tracking-[0.16em] text-white shadow-[0_8px_30px_rgba(39,57,144,0.35)] border border-white/20 transition-all duration-300 hover:scale-105 hover:shadow-[0_12px_40px_rgba(39,57,144,0.45)] active:scale-95"
         data-cursor="hover"
@@ -499,8 +465,7 @@ export function AIProjectAssistant() {
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.97 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             style={{
-              bottom: `calc(90px + env(safe-area-inset-bottom, 0px) + ${dockOffset}px)`,
-              transition: dockTransition,
+              bottom: `calc(90px + env(safe-area-inset-bottom, 0px))`,
             }}
             className="fixed right-5 z-[94] flex h-[min(620px,calc(100svh-7rem))] w-[min(430px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_25px_70px_-15px_rgba(15,23,42,0.3)] backdrop-blur-xl"
           >

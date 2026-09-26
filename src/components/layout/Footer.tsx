@@ -1,7 +1,32 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { LinkedinIcon, FacebookIcon, InstagramIcon } from "@/components/ui/SocialIcons";
 import { siteConfig } from "@/lib/site";
 import { Logo } from "@/components/ui/Logo";
+
+const socialBrandConfig: Record<
+  string,
+  {
+    Icon: React.ComponentType<{ className?: string }>;
+    colorClass: string;
+  }
+> = {
+  LinkedIn: {
+    Icon: LinkedinIcon,
+    colorClass:
+      "text-[#0A66C2] bg-[#0A66C2]/10 border-[#0A66C2]/30 hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2] hover:shadow-[0_4px_16px_rgba(10,102,194,0.4)]",
+  },
+  Facebook: {
+    Icon: FacebookIcon,
+    colorClass:
+      "text-[#1877F2] bg-[#1877F2]/10 border-[#1877F2]/30 hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] hover:shadow-[0_4px_16px_rgba(24,119,242,0.4)]",
+  },
+  Instagram: {
+    Icon: InstagramIcon,
+    colorClass:
+      "text-[#E4405F] bg-[#E4405F]/10 border-[#E4405F]/30 hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] hover:text-white hover:border-[#dc2743] hover:shadow-[0_4px_16px_rgba(228,64,95,0.4)]",
+  },
+};
 
 export function Footer() {
   return (
@@ -43,22 +68,28 @@ export function Footer() {
             >
               {siteConfig.email}
             </a>
-            <ul className="mt-5 space-y-2.5">
-              {siteConfig.socials.map((social) => (
-                <li key={social.label}>
-                  <a
-                    href={social.href}
-                    className="group inline-flex items-center gap-1.5 text-sm text-fog transition-colors hover:text-sage"
-                    aria-label={`${social.label} (placeholder)`}
-                  >
-                    {social.label}
-                    <ArrowUpRight
-                      className="h-3.5 w-3.5 opacity-50 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                      strokeWidth={1.75}
-                    />
-                  </a>
-                </li>
-              ))}
+            <ul className="mt-5 flex flex-row items-center gap-3.5">
+              {siteConfig.socials.map((social) => {
+                const brand = socialBrandConfig[social.label] || {
+                  Icon: ArrowUpRight,
+                  colorClass: "text-slate-700 bg-slate-100 border-slate-200 hover:bg-slate-800 hover:text-white",
+                };
+                const Icon = brand.Icon;
+                return (
+                  <li key={social.label}>
+                    <a
+                      href={social.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 hover:scale-110 active:scale-95 ${brand.colorClass}`}
+                      aria-label={social.label}
+                      title={social.label}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>

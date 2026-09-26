@@ -1,89 +1,125 @@
-import { Resend } from "resend";
+import nodemailer, { type Transporter } from "nodemailer";
 
 export const CONTACT_TO_EMAIL = process.env.CONTACT_TO_EMAIL ?? "hello@sagesix.co.uk";
+export const CONTACT_FROM_EMAIL = process.env.CONTACT_FROM_EMAIL ?? '"Sage Six" <hello@sagesix.co.uk>';
 
 export type MailResult =
   | { ok: true; id: string }
   | { ok: false; code: "not_configured" | "provider_error" | "rate_limited"; error?: string };
 
-const REQUIRED_ENV_VARS = ["RESEND_API_KEY", "CONTACT_FROM_EMAIL", "CONTACT_TO_EMAIL"] as const;
+let transporter: Transporter | undefined;
 
-function missingEnvVars(): string[] {
-  return REQUIRED_ENV_VARS.filter((name) => !process.env[name]);
-}
+function getTransporter(): Transporter {
+  const host = process.env.SMTP_HOST || "smtppro.zoho.eu";
+  const port = Number(process.env.SMTP_PORT) || 465;
+  const secure = process.env.SMTP_SECURE === "false" ? false : true;
+  const user = process.env.SMTP_USER || "hello@sagesix.co.uk";
+  const pass = process.env.SMTP_PASS || "qa1hTbpngcr6";
 
-let client: Resend | undefined;
-function getClient(): Resend {
-  client ??= new Resend(process.env.RESEND_API_KEY);
-  return client;
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: {
+        user,
+        pass,
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+    });
+  }
+  return transporter;
 }
 
 /**
- * Sends the enquiry notification to the Sage Six team via Resend.
- *
- * All configuration comes from server-side environment variables only —
- * RESEND_API_KEY is never read on the client, logged, or returned in a
- * response. The recipient is always CONTACT_TO_EMAIL, never the visitor's
- * address. Reply-To is set to the validated visitor email so a normal
- * "Reply" in the team's email client opens a conversation with them.
+ * Sends the enquiry notification to the Sage Six team (hello@sagesix.co.uk) via SMTP.
  */
 export async function sendEnquiryMail({
   replyTo,
   subject,
   html,
   text,
-  idempotencyKey,
-  tags,
 }: {
   replyTo: string;
   subject: string;
   html: string;
   text: string;
-  idempotencyKey: string;
+  idempotencyKey?: string;
   tags?: { name: string; value: string }[];
 }): Promise<MailResult> {
-  const missing = missingEnvVars();
-  if (missing.length > 0) {
-    // Log only which variables are missing — never their values.
-    console.error(`[contact] Missing required environment variable(s): ${missing.join(", ")}`);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!user || !pass) {
+    console.error("[contact] Missing required SMTP configuration");
     return { ok: false, code: "not_configured" };
   }
 
   try {
-    const { data, error } = await getClient().emails.send(
-      {
-        from: process.env.CONTACT_FROM_EMAIL!,
-        to: [process.env.CONTACT_TO_EMAIL!],
-        replyTo,
-        subject,
-        html,
-        text,
-        tags,
-      },
-      { idempotencyKey },
-    );
+    const info = await getTransporter().sendMail({
+      from: process.env.CONTACT_FROM_EMAIL ?? CONTACT_FROM_EMAIL,
+      to: process.env.CONTACT_TO_EMAIL ?? CONTACT_TO_EMAIL,
+      replyTo,
+      subject,
+      html,
+      text,
+    });
 
-    if (error) {
-      // Safe summary only: Resend's error `name` is a fixed enum and
-      // `message` is a provider-authored description — never the visitor's
-      // message content or any secret.
-      console.error(`[contact] Resend rejected the email: ${error.name} — ${error.message}`);
-      return {
-        ok: false,
-        code: error.name === "rate_limit_exceeded" ? "rate_limited" : "provider_error",
-      };
-    }
-
-    if (!data?.id) {
-      console.error("[contact] Resend returned no message id despite no error.");
+    if (!info.messageId) {
+      console.error("[contact] SMTP returned no message id.");
       return { ok: false, code: "provider_error" };
     }
 
-    return { ok: true, id: data.id };
+    return { ok: true, id: info.messageId };
   } catch (err) {
     console.error(
       `[contact] Unexpected error while sending enquiry email: ${err instanceof Error ? err.message : "unknown error"}`,
     );
-    return { ok: false, code: "provider_error" };
+    return { ok: false, code: "provider_error", error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/**
+ * Sends an automated confirmation email to the client (lead.email) via SMTP.
+ */
+export async function sendClientConfirmationMail({
+  to,
+  subject,
+  html,
+  text,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+}): Promise<MailResult> {
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!user || !pass) {
+    return { ok: false, code: "not_configured" };
+  }
+
+  try {
+    const info = await getTransporter().sendMail({
+      from: process.env.CONTACT_FROM_EMAIL ?? CONTACT_FROM_EMAIL,
+      to,
+      replyTo: process.env.CONTACT_TO_EMAIL ?? CONTACT_TO_EMAIL,
+      subject,
+      html,
+      text,
+    });
+
+    if (!info.messageId) {
+      console.error("[contact-confirmation] SMTP returned no message id.");
+      return { ok: false, code: "provider_error" };
+    }
+
+    return { ok: true, id: info.messageId };
+  } catch (err) {
+    console.error(
+      `[contact-confirmation] Error sending client confirmation email: ${err instanceof Error ? err.message : "unknown error"}`,
+    );
+    return { ok: false, code: "provider_error", error: err instanceof Error ? err.message : String(err) };
   }
 }

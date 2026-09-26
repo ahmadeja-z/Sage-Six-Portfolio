@@ -74,7 +74,7 @@ export function ServiceHexagon({
     >
       <Link
         href="/expertise"
-        className={`s6-hex ${service.light ? "s6-hex-light" : ""}`}
+        className={`s6-hex ${service.light ? "s6-hex-light" : ""} ${service.icon === "ai" ? "s6-hex-ai" : ""}`}
         onMouseEnter={() => setActive(true)}
         onMouseLeave={() => setActive(false)}
         onFocus={() => setActive(true)}
@@ -334,11 +334,11 @@ export function CustomerReviews({
       aria-labelledby="reviews-heading"
     >
       <div className="s6-container">
-        {/* {sampleMode && (
+        {sampleMode && (
           <p className="s6-review-sample-flag" role="note">
             Sample reviews — for design preview only
           </p>
-        )} */}
+        )}
         <Reveal>
           <p className="s6-eyebrow">IN GOOD COMPANY</p>
           <h2 id="reviews-heading">Trusted through the work.</h2>
