@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Send, Sparkles, X, Eraser, ChevronDown } from "lucide-react";
-import Link from "next/link";
-import { enquiryTypes, enquiryMessageHelpers } from "@/lib/site";
-import { services } from "@/data/content";
+import { motion, useReducedMotion } from "motion/react";
+import { Sparkles } from "lucide-react";
 import { submitLead } from "@/lib/lead";
-import { cn } from "@/lib/utils";
+import { AssistantDialog } from "./AssistantDialog";
+import { emptyLead, type ChatMessage, type LeadForm } from "./types";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -75,17 +73,15 @@ type ServerResponse = {
 
 export function AIProjectAssistant() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([intro]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
-  const [sessionId, setSessionId] = useState<string>("");
-  const listRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  // A ref (not state) because the id is only ever read inside the send/reset
+  // handlers, and lazily generated there so the client-only crypto value is
+  // never computed during server rendering.
+  const sessionIdRef = useRef<string>("");
+  const launcherRef = useRef<HTMLButtonElement>(null);
   const reduce = useReducedMotion();
-
-  useEffect(() => {
-    setSessionId(makeSessionId());
-  }, []);
 
   // Lets other pages open the assistant without prop-drilling — e.g. an
   // "Ask Sage Six" link on the Work page. Purely additive: nothing dispatches
@@ -95,22 +91,6 @@ export function AIProjectAssistant() {
     window.addEventListener("sagesix:open-assistant", openFromEvent);
     return () => window.removeEventListener("sagesix:open-assistant", openFromEvent);
   }, []);
-
-  useEffect(() => {
-    const list = listRef.current;
-    if (!list) return;
-    const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 160;
-    if (nearBottom) {
-      list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
-    }
-  }, [messages, typing, open]);
-
-  useEffect(() => {
-    if (open) {
-      const raf = requestAnimationFrame(() => inputRef.current?.focus());
-      return () => cancelAnimationFrame(raf);
-    }
-  }, [open]);
 
   function pushMessage(msg: ChatMessage) {
     setMessages((m) => [...m, msg]);
@@ -133,6 +113,7 @@ export function AIProjectAssistant() {
 
     setInput("");
     pushMessage({ role: "user", content: trimmed });
+    if (!sessionIdRef.current) sessionIdRef.current = makeSessionId();
 
     const history = messages
       .filter((m) => m.content)
@@ -146,7 +127,7 @@ export function AIProjectAssistant() {
       const res = await fetch("/api/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed, history, sessionId }),
+        body: JSON.stringify({ message: trimmed, history, sessionId: sessionIdRef.current }),
         signal: controller.signal,
       });
       clearTimeout(timer);
@@ -194,11 +175,12 @@ export function AIProjectAssistant() {
   }
 
   function newConversation() {
-    setMessages([intro]);
+    setMessages([]);
     setInput("");
-    setSessionId(makeSessionId());
+    sessionIdRef.current = makeSessionId();
     setLead(emptyLead);
     setLeadStep("form");
+    setLeadError("");
     setLeadSubmissionId(makeSessionId());
   }
 
@@ -252,207 +234,41 @@ export function AIProjectAssistant() {
     } else {
       setLeadError(
         result.message ||
-          "We couldn't submit your enquiry just now. Your details are still here, so you can try again or email hello@sagesix.co.uk.",
+        "We couldn't submit your enquiry just now. Your details are still here, so you can try again or email hello@sagesix.co.uk.",
       );
     }
   }
 
-  function LeadPanel() {
-    const labelClass = "mb-1.5 block font-mono text-[9px] uppercase tracking-[0.18em] text-mist";
-    const inputClass =
-      "w-full border border-line bg-ink-3 px-3 py-2.5 text-sm text-bone placeholder:text-mist focus:border-sage focus:outline-none";
-
-    if (leadStep === "done") {
-      return (
-        <div className="mt-3 border border-sage/40 bg-ink-3 p-4">
-          <p className="text-sm text-fog">
-            Your enquiry has been sent. You can also email hello@sagesix.co.uk or{" "}
-            <Link href="/contact" className="text-sage underline-offset-4 hover:underline">
-              use the contact form
-            </Link>
-            .
-          </p>
-        </div>
-      );
-    }
-
-    if (leadStep === "review") {
-      return (
-        <div className="mt-3 border border-line bg-ink-3 p-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-sage">Review your enquiry</p>
-          <dl className="mt-3 space-y-1.5 text-sm">
-            <Row k="Name" v={lead.name} />
-            <Row k="Email" v={lead.email} />
-            {lead.company && <Row k="Company" v={lead.company} />}
-            <Row k="Enquiry type" v={enquiryTypes.find((t) => t.id === lead.enquiryType)?.label ?? lead.enquiryType} />
-            <Row k="Service" v={serviceOptions.find((s) => s.value === lead.service)?.label ?? "Not sure yet"} />
-            <Row k="Summary" v={lead.message} />
-            {lead.websiteLink && <Row k="Website or app" v={lead.websiteLink} />}
-            {lead.timing && <Row k="Timing" v={lead.timing} />}
-            {lead.budget && <Row k="Budget" v={lead.budget} />}
-          </dl>
-          {leadError && <p className="mt-3 text-xs text-red-300">{leadError}</p>}
-          <p className="mt-4 text-xs leading-relaxed text-mist">
-            By submitting, you agree that Sage Six may use these details to respond to your enquiry.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <button
-              type="button"
-              disabled={leadSubmitting}
-              onClick={confirmLead}
-              className="bg-bone px-5 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-ink transition-colors hover:bg-sage-bright disabled:opacity-60"
-            >
-              {leadSubmitting ? "Sending…" : "Confirm & send"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setLeadStep("form")}
-              className="border border-line px-5 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-fog transition-colors hover:border-sage hover:text-sage"
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setLead(emptyLead);
-                setLeadStep("form");
-                setLeadError("");
-              }}
-              className="font-mono text-[11px] uppercase tracking-[0.16em] text-mist hover:text-fog"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="mt-3 border border-line bg-ink-3 p-4">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-sage">Prepare an enquiry</p>
-        <p className="mt-1.5 text-xs leading-relaxed text-mist">
-          A short outline is enough to start. We&apos;ll review the details before anything is sent.
-        </p>
-        {leadError && <p className="mt-2 text-xs text-red-300">{leadError}</p>}
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div>
-            <label htmlFor="lead-name" className={labelClass}>
-              Full name *
-            </label>
-            <input id="lead-name" value={lead.name} onChange={(e) => setLeadField("name", e.target.value)} className={inputClass} placeholder="Jane Doe" />
-          </div>
-          <div>
-            <label htmlFor="lead-email" className={labelClass}>
-              Email *
-            </label>
-            <input id="lead-email" type="email" value={lead.email} onChange={(e) => setLeadField("email", e.target.value)} className={inputClass} placeholder="jane@company.com" />
-          </div>
-          <div>
-            <label htmlFor="lead-company" className={labelClass}>
-              Company (optional)
-            </label>
-            <input id="lead-company" value={lead.company} onChange={(e) => setLeadField("company", e.target.value)} className={inputClass} />
-          </div>
-          <div>
-            <label htmlFor="lead-service" className={labelClass}>
-              Service of interest
-            </label>
-            <select id="lead-service" value={lead.service} onChange={(e) => setLeadField("service", e.target.value)} className={inputClass}>
-              {serviceOptions.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="sm:col-span-2">
-            <label htmlFor="lead-message" className={labelClass}>
-              What do you need? *
-            </label>
-            <textarea
-              id="lead-message"
-              rows={3}
-              value={lead.message}
-              onChange={(e) => setLeadField("message", e.target.value)}
-              className={cn(inputClass, "resize-none")}
-              placeholder={enquiryMessageHelpers[lead.enquiryType] ?? enquiryMessageHelpers["new-project"]}
-            />
-          </div>
-          <div>
-            <label htmlFor="lead-link" className={labelClass}>
-              Existing website or app (optional)
-            </label>
-            <input id="lead-link" value={lead.websiteLink} onChange={(e) => setLeadField("websiteLink", e.target.value)} className={inputClass} placeholder="https://…" />
-          </div>
-          <div>
-            <label htmlFor="lead-timing" className={labelClass}>
-              Timing (optional)
-            </label>
-            <input id="lead-timing" value={lead.timing} onChange={(e) => setLeadField("timing", e.target.value)} className={inputClass} />
-          </div>
-          <div className="sm:col-span-2">
-            <label htmlFor="lead-budget" className={labelClass}>
-              Budget range (optional)
-            </label>
-            <input id="lead-budget" value={lead.budget} onChange={(e) => setLeadField("budget", e.target.value)} className={inputClass} placeholder="e.g. £10k–£25k" />
-          </div>
-        </div>
-        <p className="mt-3 text-[11px] leading-relaxed text-mist">
-          Please leave passwords, API keys and other sensitive information out of this form.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              setLeadError("");
-              setLeadStep("review");
-            }}
-            className="bg-bone px-5 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-ink transition-colors hover:bg-sage-bright"
-          >
-            Review enquiry
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setLead(emptyLead);
-              setLeadError("");
-            }}
-            className="font-mono text-[11px] uppercase tracking-[0.16em] text-mist hover:text-fog"
-          >
-            Clear
-          </button>
-        </div>
-      </div>
-    );
+  function reviewLead() {
+    setLeadError("");
+    setLeadStep("review");
   }
 
-  function Row({ k, v }: { k: string; v: string }) {
-    return (
-      <div className="flex gap-2">
-        <dt className="w-28 shrink-0 font-mono text-[9px] uppercase tracking-[0.14em] text-mist">{k}</dt>
-        <dd className="text-fog">{v}</dd>
-      </div>
-    );
+  function clearLead() {
+    setLead(emptyLead);
+    setLeadError("");
+    setLeadStep("form");
   }
 
   return (
     <>
       <motion.button
+        ref={launcherRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close AI assistant" : "Open AI assistant"}
         aria-expanded={open}
         initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 1.6, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        animate={{ opacity: open ? 0 : 1, scale: 1 }}
+        transition={{ delay: open ? 0 : 1.6, duration: open ? 0.15 : 0.5, ease: [0.16, 1, 0.3, 1] }}
         style={{
           bottom: `calc(20px + env(safe-area-inset-bottom, 0px))`,
         }}
         className="fixed right-5 z-[95] flex h-13 items-center gap-2.5 rounded-full bg-gradient-to-r from-[#17184a] via-[#273990] to-[#0f75bd] px-5 font-mono text-[11px] uppercase tracking-[0.16em] text-white shadow-[0_8px_30px_rgba(39,57,144,0.35)] border border-white/20 transition-all duration-300 hover:scale-105 hover:shadow-[0_12px_40px_rgba(39,57,144,0.45)] active:scale-95"
         data-cursor="hover"
       >
-        {open ? <X className="h-4 w-4" /> : <Sparkles className="h-4 w-4 text-cyan-300" />}
-        <span className="hidden font-medium sm:inline">{open ? "Close" : "Ask Sage Six"}</span>
+        <Sparkles className="h-4 w-4 text-cyan-300" />
+        <span className="hidden font-medium sm:inline">Ask Sage Six</span>
       </motion.button>
 
       <AnimatePresence>
