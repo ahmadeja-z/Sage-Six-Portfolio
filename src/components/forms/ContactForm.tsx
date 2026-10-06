@@ -287,7 +287,7 @@ export function ContactForm({
             autoComplete="name"
             value={form.name}
             onChange={(e) => setField("name", e.target.value)}
-            placeholder="Jane Doe"
+            placeholder=""
             className={inputClass(errors.name)}
             aria-invalid={!!errors.name}
             aria-describedby={errors.name ? "name-error" : undefined}
@@ -308,7 +308,7 @@ export function ContactForm({
             autoComplete="email"
             value={form.email}
             onChange={(e) => setField("email", e.target.value)}
-            placeholder="jane@company.com"
+            placeholder=""
             className={inputClass(errors.email)}
             aria-invalid={!!errors.email}
             aria-describedby={errors.email ? "email-error" : undefined}
@@ -330,7 +330,7 @@ export function ContactForm({
             autoComplete="organization"
             value={form.company}
             onChange={(e) => setField("company", e.target.value)}
-            placeholder="Your company"
+            placeholder=""
             className={inputClass()}
           />
         </div>
@@ -363,7 +363,7 @@ export function ContactForm({
           rows={6}
           value={form.message}
           onChange={(e) => setField("message", e.target.value)}
-          placeholder={messageHelper}
+          placeholder=""
           className={cn(inputClass(errors.message), "resize-none")}
           aria-invalid={!!errors.message}
           aria-describedby={errors.message ? "message-error message-help" : "message-help"}
@@ -416,7 +416,7 @@ export function ContactForm({
                     type="url"
                     value={form.websiteLink}
                     onChange={(e) => setField("websiteLink", e.target.value)}
-                    placeholder="https://…"
+                    placeholder=""
                     className={inputClass()}
                   />
                 </div>
@@ -429,7 +429,7 @@ export function ContactForm({
                     type="text"
                     value={form.budget}
                     onChange={(e) => setField("budget", e.target.value)}
-                    placeholder="e.g. £10k–£25k"
+                    placeholder=""
                     className={inputClass()}
                   />
                 </div>
@@ -443,7 +443,7 @@ export function ContactForm({
                     type="text"
                     value={form.timing}
                     onChange={(e) => setField("timing", e.target.value)}
-                    placeholder="e.g. 3–6 months, or Not decided yet"
+                    placeholder=""
                     className={inputClass()}
                   />
                 </div>

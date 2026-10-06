@@ -22,7 +22,6 @@ import {
   homeProjects,
   capabilities,
   testimonials,
-  companyRecord,
   REVIEW_MARQUEE_THRESHOLD,
   type HomeService,
   type Testimonial,
@@ -596,15 +595,7 @@ export function HomePageContent({ articles }: { articles: HomeInsight[] }) {
                 </Reveal>
               );
             })}
-          </div>
-          <p className="s6-company">
-            {companyRecord.name}
-            <span>UK registered software company</span>
-            <a href={companyRecord.url}>
-              Company No. {companyRecord.number}{" "}
-              <ArrowRight size={13} aria-hidden="true" />
-            </a>
-          </p>
+        </div>
         </div>
       </section>
       <section
